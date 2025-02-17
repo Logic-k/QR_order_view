@@ -153,20 +153,41 @@ def order():
 @app.route("/admin")
 def admin():
     orders = db.collection("orders").stream()
-    order_rows = "".join(
-        f"<tr><td>{order.to_dict().get('seat')}</td><td>{order.to_dict().get('salt')}</td><td>{order.to_dict().get('drink')}</td><td><button onclick=\"deleteOrder('{order.id}')\">삭제</button></td></tr>"
-        for order in orders
-    )
-    
     return render_template_string('''
     <html>
     <head>
         <title>관리자 페이지</title>
         <style>
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-            th { background-color: #4CAF50; color: white; }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            table, th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: center;
+            }
+            th {
+                background-color: #4CAF50;
+                color: white;
+            }
         </style>
+        <script>
+            function deleteOrder(orderId) {
+                fetch('/delete-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: orderId })
+                }).then(res => res.json()).then(() => location.reload());
+            }
+            function deleteAllOrders() {
+                fetch('/delete-all-orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                }).then(res => res.json()).then(() => location.reload());
+            }
+        </script>
     </head>
     <body>
         <h2>주문 관리</h2>
@@ -177,13 +198,20 @@ def admin():
                 <th>음료</th>
                 <th>삭제</th>
             </tr>
-            {{ order_rows|safe }}
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.seat }}</td>
+                <td>{{ order.salt }}</td>
+                <td>{{ order.drink }}</td>
+                <td><button onclick="deleteOrder('{{ order.id }}')">삭제</button></td>
+            </tr>
+            {% endfor %}
         </table>
         <br>
         <button onclick="deleteAllOrders()">모든 주문 삭제</button>
     </body>
     </html>
-    ''', order_rows=order_rows)
+    ''', orders=[{**o.to_dict(), 'id': o.id} for o in db.collection("orders").stream()])
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
