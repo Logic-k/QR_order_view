@@ -102,6 +102,16 @@ def order():
     </html>
     ''', seat_number=seat_number)
 
+# 관리자 페이지 (주문 확인)
+@app.route("/admin")
+def admin():
+    orders = db.collection("orders").stream()
+    order_list = []
+    for order in orders:
+        order_dict = order.to_dict()
+        order_list.append(f"자리 {order_dict.get('seat')}: {order_dict.get('salt')}, {order_dict.get('drink')} ({order_dict.get('status')})")
+    return "<br>".join(order_list) + "<br><br><a href='/admin'>새로고침</a>"
+
 # Gunicorn이 실행할 Flask 애플리케이션을 `app`으로 설정
 if __name__ == "__main__":
     app.run(debug=True)
