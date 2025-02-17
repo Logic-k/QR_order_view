@@ -102,15 +102,45 @@ def order():
     </html>
     ''', seat_number=seat_number)
 
-# 관리자 페이지 (주문 확인)
+# 관리자 페이지 (주문 확인 및 삭제 기능 추가)
 @app.route("/admin")
 def admin():
     orders = db.collection("orders").stream()
     order_list = []
     for order in orders:
         order_dict = order.to_dict()
-        order_list.append(f"자리 {order_dict.get('seat')}: {order_dict.get('salt')}, {order_dict.get('drink')} ({order_dict.get('status')})")
-    return "<br>".join(order_list) + "<br><br><a href='/admin'>새로고침</a>"
+        order_list.append(f"자리 {order_dict.get('seat')}: {order_dict.get('salt')}, {order_dict.get('drink')} ({order_dict.get('status')}) <button onclick=\"deleteOrder('{order.id}')\">삭제</button>")
+    return "<br>".join(order_list) + '''<br><br><button onclick="deleteAllOrders()">모든 주문 삭제</button>
+    <script>
+        function deleteOrder(orderId) {
+            fetch('/delete-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: orderId })
+            }).then(() => window.location.reload());
+        }
+        
+        function deleteAllOrders() {
+            fetch('/delete-all-orders', {
+                method: 'POST'
+            }).then(() => window.location.reload());
+        }
+    </script>'''
+
+# 개별 주문 삭제 API
+@app.route("/delete-order", methods=["POST"])
+def delete_order():
+    order_id = request.json.get("id")
+    db.collection("orders").document(order_id).delete()
+    return jsonify({"message": "주문이 삭제되었습니다."})
+
+# 모든 주문 삭제 API
+@app.route("/delete-all-orders", methods=["POST"])
+def delete_all_orders():
+    orders = db.collection("orders").stream()
+    for order in orders:
+        db.collection("orders").document(order.id).delete()
+    return jsonify({"message": "모든 주문이 삭제되었습니다."})
 
 # Gunicorn이 실행할 Flask 애플리케이션을 `app`으로 설정
 if __name__ == "__main__":
