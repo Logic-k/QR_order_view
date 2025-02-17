@@ -75,27 +75,30 @@ def order():
     <body>
         <h2>자리 {{ seat_number }}번 주문</h2>
         <label>족욕 소금 선택:</label>
+        <p>라벤더 (Lavender / 薰衣草) - 피부 보습 (Moisturizing / 保湿)</p>
+        <p>스피아민트 (Spearmint / 留兰香) - 피로 회복 (Fatigue Recovery / 缓解疲劳)</p>
+        <p>히말라야 (Himalayan / 喜马拉雅) - 붓기 완화 (Reduce Swelling / 缓解浮肿)</p>
         <select id="salt">
-            <option value="라벤더">라벤더</option>
-            <option value="스피아민트">스피아민트</option>
-            <option value="히말라야">히말라야</option>
+            <option value="라벤더">라벤더 (Lavender / 薰衣草)</option>
+            <option value="스피아민트">스피아민트 (Spearmint / 留兰香)</option>
+            <option value="히말라야">히말라야 (Himalayan / 喜马拉雅)</option>
         </select><br/>
         <label>음료 선택:</label>
         <select id="drink">
-            <option value="아메리카노(HOT)">아메리카노(HOT)</option>
-            <option value="아메리카노(COLD)">아메리카노(COLD)</option>
-            <option value="캐모마일(HOT)">캐모마일(HOT)</option>
-            <option value="캐모마일(COLD)">캐모마일(COLD)</option>
-            <option value="페퍼민트(HOT)">페퍼민트(HOT)</option>
-            <option value="페퍼민트(COLD)">페퍼민트(COLD)</option>
-            <option value="루이보스(HOT)">루이보스(HOT)</option>
-            <option value="루이보스(COLD)">루이보스(COLD)</option>
-            <option value="얼그레이(HOT)">얼그레이(HOT)</option>
-            <option value="얼그레이(COLD)">얼그레이(COLD)</option>
-            <option value="핫초코(Only HOT)">핫초코(Only HOT)</option>
-            <option value="아이스티(Only ICE)">아이스티(Only ICE)</option>
-            <option value="사과주스(Only ICE)">사과주스(Only ICE)</option>
-            <option value="오렌지주스(Only ICE)">오렌지주스(Only ICE)</option>
+            <option value="아메리카노(HOT)">아메리카노(HOT) / Americano (HOT) / 美式咖啡 (热)</option>
+            <option value="아메리카노(COLD)">아메리카노(COLD) / Americano (COLD) / 美式咖啡 (冰)</option>
+            <option value="캐모마일(HOT)">캐모마일(HOT) / Chamomile (HOT) / 洋甘菊茶 (热)</option>
+            <option value="캐모마일(COLD)">캐모마일(COLD) / Chamomile (COLD) / 洋甘菊茶 (冰)</option>
+            <option value="페퍼민트(HOT)">페퍼민트(HOT) / Peppermint (HOT) / 薄荷茶 (热)</option>
+            <option value="페퍼민트(COLD)">페퍼민트(COLD) / Peppermint (COLD) / 薄荷茶 (冰)</option>
+            <option value="루이보스(HOT)">루이보스(HOT) / Rooibos (HOT) / 南非红茶 (热)</option>
+            <option value="루이보스(COLD)">루이보스(COLD) / Rooibos (COLD) / 南非红茶 (冰)</option>
+            <option value="얼그레이(HOT)">얼그레이(HOT) / Earl Grey (HOT) / 伯爵茶 (热)</option>
+            <option value="얼그레이(COLD)">얼그레이(COLD) / Earl Grey (COLD) / 伯爵茶 (冰)</option>
+            <option value="핫초코(Only HOT)">핫초코(Only HOT) / Hot Chocolate (Only HOT) / 热巧克力</option>
+            <option value="아이스티(Only ICE)">아이스티(Only ICE) / Iced Tea (Only ICE) / 冰茶</option>
+            <option value="사과주스(Only ICE)">사과주스(Only ICE) / Apple Juice (Only ICE) / 苹果汁</option>
+            <option value="오렌지주스(Only ICE)">오렌지주스(Only ICE) / Orange Juice (Only ICE) / 橙汁</option>
         </select><br/>
         <button onclick="placeOrder()">주문하기</button>
     </body>
@@ -106,10 +109,10 @@ def order():
 @app.route("/admin")
 def admin():
     orders = db.collection("orders").stream()
-    order_list = []
-    for order in orders:
-        order_dict = order.to_dict()
-        order_list.append(f"자리 {order_dict.get('seat')}: {order_dict.get('salt')}, {order_dict.get('drink')} ({order_dict.get('status')}) <button onclick=\"deleteOrder('{order.id}')\">삭제</button>")
+    order_list = [
+        f"자리 {order.to_dict().get('seat')}: {order.to_dict().get('salt')}, {order.to_dict().get('drink')} ({order.to_dict().get('status')}) <button onclick=\"deleteOrder('{order.id}')\">삭제</button>"
+        for order in orders
+    ]
     return "<br>".join(order_list) + '''<br><br><button onclick="deleteAllOrders()">모든 주문 삭제</button>
     <script>
         function deleteOrder(orderId) {
