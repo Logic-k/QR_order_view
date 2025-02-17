@@ -86,6 +86,7 @@ def order():
             table, th, td {
                 border: 1px solid #ddd;
                 padding: 8px;
+                text-align: center;
             }
             th {
                 background-color: #4CAF50;
@@ -176,7 +177,7 @@ def admin():
                 <th>음료</th>
                 <th>삭제</th>
             </tr>
-            {{ order_rows }}
+            {{ order_rows|safe }}
         </table>
         <br>
         <button onclick="deleteAllOrders()">모든 주문 삭제</button>
