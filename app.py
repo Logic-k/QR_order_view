@@ -39,6 +39,27 @@ def order():
     <html>
     <head>
         <title>QR 주문</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                text-align: center;
+            }
+            select, button {
+                font-size: 18px;
+                padding: 10px;
+                margin: 10px;
+                width: 80%;
+                max-width: 300px;
+            }
+        </style>
         <script>
             function placeOrder() {
                 let salt = document.getElementById('salt').value;
@@ -80,47 +101,6 @@ def order():
     </body>
     </html>
     ''', seat_number=seat_number)
-
-# 관리자 페이지 (주문 확인 및 삭제)
-@app.route("/admin")
-def admin():
-    orders = db.collection("orders").stream()
-    order_list = [
-        f"자리 {o.get('seat')}: {o.get('salt')}, {o.get('drink')} ({o.get('status')}) <button onclick=\"deleteOrder('{o.id}')\">삭제</button>"
-        for o in orders
-    ]
-    
-    return "<br>".join(order_list) + '''<br><br><button onclick="deleteAllOrders()">모든 주문 삭제</button>
-    <script>
-        function deleteOrder(orderId) {
-            fetch('/delete-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: orderId })
-            }).then(() => window.location.reload());
-        }
-        
-        function deleteAllOrders() {
-            fetch('/delete-all-orders', {
-                method: 'POST'
-            }).then(() => window.location.reload());
-        }
-    </script>'''
-
-# 개별 주문 삭제 API
-@app.route("/delete-order", methods=["POST"])
-def delete_order():
-    order_id = request.json.get("id")
-    db.collection("orders").document(order_id).delete()
-    return jsonify({"message": "주문이 삭제되었습니다."})
-
-# 모든 주문 삭제 API
-@app.route("/delete-all-orders", methods=["POST"])
-def delete_all_orders():
-    orders = db.collection("orders").stream()
-    for order in orders:
-        db.collection("orders").document(order.id).delete()
-    return jsonify({"message": "모든 주문이 삭제되었습니다."})
 
 # Gunicorn이 실행할 Flask 애플리케이션을 `app`으로 설정
 if __name__ == "__main__":
