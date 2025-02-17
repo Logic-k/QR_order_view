@@ -184,3 +184,20 @@ def admin():
     </body>
     </html>
     ''', order_rows=order_rows)
+
+# 개별 주문 삭제 API
+@app.route("/delete-order", methods=["POST"])
+def delete_order():
+    order_id = request.json.get("id")
+    if order_id:
+        db.collection("orders").document(order_id).delete()
+        return jsonify({"message": "주문이 삭제되었습니다."})
+    return jsonify({"error": "유효한 주문 ID가 없습니다."}), 400
+
+# 모든 주문 삭제 API
+@app.route("/delete-all-orders", methods=["POST"])
+def delete_all_orders():
+    orders = db.collection("orders").stream()
+    for order in orders:
+        db.collection("orders").document(order.id).delete()
+    return jsonify({"message": "모든 주문이 삭제되었습니다."})
