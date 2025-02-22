@@ -119,14 +119,15 @@ def order():
     </head>
     <body>
         <div class="container">
-            <h2>자리 {{ seat_number }}번 주문</h2>
-            <label>족욕 소금 선택:</label>
+           <h2>자리 {{ seat_number }}번 (Seat No. {{ seat_number }}) (座位 {{ seat_number }})</h2>
+	   <p>발을 담그고 있어주세요! (Please keep your feet soaked!) (请保持泡脚!)</p>
+           <label>족욕 소금 선택 (Foot Bath Salt) (足浴盐选择):</label>
             <select id="salt">
                 <option value="라벤더">라벤더 (Lavender / 薰衣草)</option>
                 <option value="스피아민트">스피아민트 (Spearmint / 留兰香)</option>
                 <option value="히말라야">히말라야 (Himalayan / 喜马拉雅)</option>
             </select><br/>
-            <label>음료 선택:</label>
+            <label>음료 선택 (Drink Selection) (饮料选择):</label>
             <select id="drink">
     <option value="아메리카노(HOT)">아메리카노(HOT) / 美式咖啡 (热)</option>
     <option value="아메리카노(COLD)">아메리카노(COLD) / 美式咖啡 (冰)</option>
@@ -143,7 +144,7 @@ def order():
     <option value="사과주스(Only ICE)">사과주스(Only ICE) / 苹果汁</option>
     <option value="오렌지주스(Only ICE)">오렌지주스(Only ICE) / 橙汁</option>
 </select><br/>
-            <button onclick="placeOrder()">주문하기</button>
+            <button onclick="placeOrder()">주문하기 (Order Now)</button>
         </div>
     </body>
     </html>
