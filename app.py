@@ -172,6 +172,14 @@ def admin():
                 max-width: 800px;
                 margin: auto;
             }
+            .grid-container-vertical {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                padding: 20px;
+                max-width: 400px;
+                margin: auto;
+            }
             .seat {
                 background: rgba(255, 255, 255, 0.8);
                 padding: 10px;
@@ -212,24 +220,35 @@ def admin():
     <body>
         <h2>주문 관리</h2>
         <div class="grid-container">
-            {% for i in range(1, 9) %}
-                {% for j in range(1, 5) %}
-                    {% set seat_number = ((j-1) * 8) + i %}
-                    {% set order = orders.get(seat_number|string) %}
-                    <div class="seat {% if order %}occupied{% endif %}">
-                        {{ seat_number }}번
-                        {% if order %}
-                            <div>{{ order.salt }}</div>
-                            <div>{{ order.drink }}</div>
-                            <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+            {% for seat_number in range(1, 9) %}
+                {% set order = orders.get(seat_number|string) %}
+                <div class="seat {% if order %}occupied{% endif %}">
+                    {{ seat_number }}번
+                    {% if order %}
+                        <div>{{ order.salt }}</div>
+                        <div>{{ order.drink }}</div>
+                        <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="grid-container-vertical">
+            {% for seat_number in range(9, 13) %}
+                {% set order = orders.get(seat_number|string) %}
+                <div class="seat {% if order %}occupied{% endif %}">
+                    {{ seat_number }}번
+                    {% if order %}
+                        <div>{{ order.salt }}</div>
+                        <div>{{ order.drink }}</div>
+                        <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
+                    {% endif %}
+                </div>
             {% endfor %}
         </div>
     </body>
     </html>
     ''', orders=orders)
+
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
