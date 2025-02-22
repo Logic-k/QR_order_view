@@ -152,7 +152,7 @@ def order():
 # 관리자 페이지 (자리 형상화 UI 적용)
 @app.route("/admin")
 def admin():
-    orders = {order.id: order.to_dict() for order in db.collection("orders").stream()}
+    orders = {order.to_dict().get("seat"): {**order.to_dict(), "id": order.id} for order in db.collection("orders").stream()}
     return render_template_string('''
     <html>
     <head>
@@ -163,6 +163,12 @@ def admin():
                 text-align: center;
                 background: linear-gradient(to bottom, #3b8ed6, #dff6ff);
                 color: white;
+            }
+            .layout {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
             }
             .grid-container {
                 display: grid;
@@ -192,7 +198,7 @@ def admin():
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                height: 80px;
+                height: 100px;
                 cursor: pointer;
                 position: relative;
             }
@@ -219,31 +225,33 @@ def admin():
     </head>
     <body>
         <h2>주문 관리</h2>
-        <div class="grid-container">
-            {% for seat_number in range(1, 9) %}
-                {% set order = orders.get(seat_number|string) %}
-                <div class="seat {% if order %}occupied{% endif %}">
-                    {{ seat_number }}번
-                    {% if order %}
-                        <div>{{ order.salt }}</div>
-                        <div>{{ order.drink }}</div>
-                        <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-        <div class="grid-container-vertical">
-            {% for seat_number in range(9, 13) %}
-                {% set order = orders.get(seat_number|string) %}
-                <div class="seat {% if order %}occupied{% endif %}">
-                    {{ seat_number }}번
-                    {% if order %}
-                        <div>{{ order.salt }}</div>
-                        <div>{{ order.drink }}</div>
-                        <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
-                    {% endif %}
-                </div>
-            {% endfor %}
+        <div class="layout">
+            <div class="grid-container">
+                {% for seat_number in range(1, 9) %}
+                    {% set order = orders.get(seat_number|string) %}
+                    <div class="seat {% if order %}occupied{% endif %}">
+                        {{ seat_number }}번
+                        {% if order %}
+                            <div>{{ order.salt }}</div>
+                            <div>{{ order.drink }}</div>
+                            <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="grid-container-vertical">
+                {% for seat_number in range(9, 13) %}
+                    {% set order = orders.get(seat_number|string) %}
+                    <div class="seat {% if order %}occupied{% endif %}">
+                        {{ seat_number }}번
+                        {% if order %}
+                            <div>{{ order.salt }}</div>
+                            <div>{{ order.drink }}</div>
+                            <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </body>
     </html>
