@@ -170,21 +170,14 @@ def admin():
                 align-items: center;
                 gap: 20px;
             }
-            .grid-container {
-                display: grid;
-                grid-template-columns: repeat(8, 1fr);
-                gap: 10px;
-                padding: 20px;
-                max-width: 800px;
-                margin: auto;
-            }
-            .grid-container-vertical {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-                padding: 20px;
-                max-width: 400px;
-                margin: auto;
+            .seat-container {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 20px;
+                max-width: 1000px;
             }
             .seat {
                 background: rgba(255, 255, 255, 0.8);
@@ -198,7 +191,8 @@ def admin():
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                height: 100px;
+                height: 80px;
+                width: 80px;
                 cursor: pointer;
                 position: relative;
             }
@@ -211,6 +205,16 @@ def admin():
                 font-size: 12px;
                 color: red;
                 cursor: pointer;
+            }
+            .row {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+            }
+            .column {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
             }
         </style>
         <script>
@@ -225,8 +229,8 @@ def admin():
     </head>
     <body>
         <h2>주문 관리</h2>
-        <div class="layout">
-            <div class="grid-container">
+        <div class="seat-container">
+            <div class="row">
                 {% for seat_number in range(1, 9) %}
                     {% set order = orders.get(seat_number|string) %}
                     <div class="seat {% if order %}occupied{% endif %}">
@@ -239,7 +243,7 @@ def admin():
                     </div>
                 {% endfor %}
             </div>
-            <div class="grid-container-vertical">
+            <div class="column">
                 {% for seat_number in range(9, 13) %}
                     {% set order = orders.get(seat_number|string) %}
                     <div class="seat {% if order %}occupied{% endif %}">
@@ -256,7 +260,6 @@ def admin():
     </body>
     </html>
     ''', orders=orders)
-
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
