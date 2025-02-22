@@ -125,7 +125,6 @@ def order():
 	</div>
         <div class="container">
            <h2>자리 {{ seat_number }}번 (Seat No. {{ seat_number }}) (座位 {{ seat_number }})</h2>
-	   <p>발을 담그고 있어주세요! (Please keep your feet soaked!) (请保持泡脚!)</p>
            <label>족욕 소금 선택 (Foot Bath Salt) (足浴盐选择):</label>
             <select id="salt">
                 <option value="라벤더">라벤더 (Lavender / 薰衣草)</option>
@@ -151,6 +150,7 @@ def order():
 </select><br/>
             <button onclick="placeOrder()">주문하기 (Order Now)</button>
         </div>
+	<div class="announcement">즐거운 시간 보내세요! (Enjoy your time!) (祝您玩得开心!)</div>
     </body>
     </html>
     ''', seat_number=seat_number)
@@ -264,7 +264,6 @@ def admin():
                 </div>
             </div>
         </div>
-	<div class="announcement">즐거운 시간 보내세요! (Enjoy your time!) (祝您玩得开心!)</div>
     </body>
     </html>
     ''', orders=orders)
