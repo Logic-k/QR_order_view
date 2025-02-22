@@ -149,28 +149,54 @@ def order():
     </html>
     ''', seat_number=seat_number)
 
-# 관리자 페이지 (표 형식 + 삭제 기능 추가)
+# 관리자 페이지 (자리 형상화 UI 적용)
 @app.route("/admin")
 def admin():
-    orders = db.collection("orders").stream()
+    orders = {order.id: order.to_dict() for order in db.collection("orders").stream()}
     return render_template_string('''
     <html>
     <head>
         <title>관리자 페이지</title>
         <style>
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
-            }
-            table, th, td {
-                border: 1px solid #ddd;
-                padding: 8px;
+            body {
+                font-family: 'Noto Sans', sans-serif;
                 text-align: center;
-            }
-            th {
-                background-color: #4CAF50;
+                background: linear-gradient(to bottom, #3b8ed6, #dff6ff);
                 color: white;
+            }
+            .grid-container {
+                display: grid;
+                grid-template-columns: repeat(8, 1fr);
+                gap: 10px;
+                padding: 20px;
+                max-width: 800px;
+                margin: auto;
+            }
+            .seat {
+                background: rgba(255, 255, 255, 0.8);
+                padding: 10px;
+                border-radius: 8px;
+                text-align: center;
+                color: black;
+                font-size: 14px;
+                font-weight: bold;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 80px;
+                cursor: pointer;
+                position: relative;
+            }
+            .seat.occupied {
+                background: #ffcc00;
+            }
+            .seat .delete-btn {
+                position: absolute;
+                bottom: 5px;
+                font-size: 12px;
+                color: red;
+                cursor: pointer;
             }
         </style>
         <script>
@@ -181,37 +207,29 @@ def admin():
                     body: JSON.stringify({ id: orderId })
                 }).then(res => res.json()).then(() => location.reload());
             }
-            function deleteAllOrders() {
-                fetch('/delete-all-orders', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                }).then(res => res.json()).then(() => location.reload());
-            }
         </script>
     </head>
     <body>
         <h2>주문 관리</h2>
-        <table>
-            <tr>
-                <th>자리</th>
-                <th>족욕 소금</th>
-                <th>음료</th>
-                <th>삭제</th>
-            </tr>
-            {% for order in orders %}
-            <tr>
-                <td>{{ order.seat }}</td>
-                <td>{{ order.salt }}</td>
-                <td>{{ order.drink }}</td>
-                <td><button onclick="deleteOrder('{{ order.id }}')">삭제</button></td>
-            </tr>
+        <div class="grid-container">
+            {% for i in range(1, 9) %}
+                {% for j in range(1, 5) %}
+                    {% set seat_number = ((j-1) * 8) + i %}
+                    {% set order = orders.get(seat_number|string) %}
+                    <div class="seat {% if order %}occupied{% endif %}">
+                        {{ seat_number }}번
+                        {% if order %}
+                            <div>{{ order.salt }}</div>
+                            <div>{{ order.drink }}</div>
+                            <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
             {% endfor %}
-        </table>
-        <br>
-        <button onclick="deleteAllOrders()">모든 주문 삭제</button>
+        </div>
     </body>
     </html>
-    ''', orders=[{**o.to_dict(), 'id': o.id} for o in db.collection("orders").stream()])
+    ''', orders=orders)
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
@@ -229,3 +247,6 @@ def delete_all_orders():
     for order in orders:
         db.collection("orders").document(order.id).delete()
     return jsonify({"message": "모든 주문이 삭제되었습니다."})
+
+
+
