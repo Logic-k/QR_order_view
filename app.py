@@ -166,18 +166,17 @@ def admin():
             }
             .layout {
                 display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 20px;
-            }
-            .seat-container {
-                display: flex;
                 flex-direction: row;
                 align-items: center;
                 justify-content: center;
-                flex-wrap: wrap;
+                gap: 50px;
+            }
+            .seat-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
                 gap: 20px;
-                max-width: 1000px;
             }
             .seat {
                 background: rgba(255, 255, 255, 0.8);
@@ -229,20 +228,7 @@ def admin():
     </head>
     <body>
         <h2>주문 관리</h2>
-        <div class="seat-container">
-            <div class="row">
-                {% for seat_number in range(1, 9) %}
-                    {% set order = orders.get(seat_number|string) %}
-                    <div class="seat {% if order %}occupied{% endif %}">
-                        {{ seat_number }}번
-                        {% if order %}
-                            <div>{{ order.salt }}</div>
-                            <div>{{ order.drink }}</div>
-                            <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
+        <div class="layout">
             <div class="column">
                 {% for seat_number in range(9, 13) %}
                     {% set order = orders.get(seat_number|string) %}
@@ -255,6 +241,21 @@ def admin():
                         {% endif %}
                     </div>
                 {% endfor %}
+            </div>
+            <div class="seat-container">
+                <div class="row">
+                    {% for seat_number in range(1, 9) %}
+                        {% set order = orders.get(seat_number|string) %}
+                        <div class="seat {% if order %}occupied{% endif %}">
+                            {{ seat_number }}번
+                            {% if order %}
+                                <div>{{ order.salt }}</div>
+                                <div>{{ order.drink }}</div>
+                                <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </body>
