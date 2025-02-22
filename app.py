@@ -118,6 +118,11 @@ def order():
         </script>
     </head>
     <body>
+	<div class="announcement">
+    		불편하신 점이 있다면 직원을 불러주세요😊<br/>
+    		(If you have any inconvenience, please call a staff member!)<br/>
+    		(如果有不便之处，请呼叫工作人员!)
+	</div>
         <div class="container">
            <h2>자리 {{ seat_number }}번 (Seat No. {{ seat_number }}) (座位 {{ seat_number }})</h2>
 	   <p>발을 담그고 있어주세요! (Please keep your feet soaked!) (请保持泡脚!)</p>
@@ -259,6 +264,7 @@ def admin():
                 </div>
             </div>
         </div>
+	<div class="announcement">즐거운 시간 보내세요! (Enjoy your time!) (祝您玩得开心!)</div>
     </body>
     </html>
     ''', orders=orders)
