@@ -268,7 +268,19 @@ def admin():
                 location.reload();
             }, 5000); // 5초마다 새로고침
         </script>
-    </head>
+    <script>
+    let refreshTime = 5; // 새로고침 간격 (초 단위)
+    function updateTimer() {
+        document.getElementById('refresh-timer').innerText = `새로고침까지 ${refreshTime}초`;
+        refreshTime--;
+        if (refreshTime < 0) {
+            location.reload();
+        } else {
+            setTimeout(updateTimer, 1000);
+        }
+    }
+    document.addEventListener("DOMContentLoaded", updateTimer);
+</script>    </head>
     <body>
         <h2>주문 관리</h2>
         <div class="layout">
