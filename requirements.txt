@@ -1,5 +1,7 @@
 flask
+Flask-SocketIO
 firebase-admin
+eventlet
 gunicorn
 qrcode
 pillow
