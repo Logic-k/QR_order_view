@@ -3,9 +3,11 @@ import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 from flask import Flask, request, jsonify, render_template_string
+from flask_socketio import SocketIO
 
 # Flask 애플리케이션 생성
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # 환경 변수에서 Firebase JSON 키 가져오기
 firebase_credentials = os.getenv("FIREBASE_CREDENTIALS")
@@ -32,7 +34,12 @@ def order():
             "drink": data.get("drink"),
             "status": "대기 중"
         }
-        db.collection("orders").add(order_data)
+        new_order_ref = db.collection("orders").add(order_data)
+        order_data["id"] = new_order_ref[1].id
+
+        # 실시간 주문 업데이트 (WebSocket 이벤트 전송)
+        socketio.emit("new_order", order_data)
+
         return jsonify({"message": "주문이 완료되었습니다!"})
 
     return render_template_string('''
@@ -155,7 +162,7 @@ def order():
     </html>
     ''', seat_number=seat_number)
 
-# 관리자 페이지 (자리 형상화 UI 적용)
+# 관리자 페이지 (자리 형상화 UI 적용 및 실시간 업데이트)
 @app.route("/admin")
 def admin():
     orders = {order.to_dict().get("seat"): {**order.to_dict(), "id": order.id} for order in db.collection("orders").stream()}
@@ -163,6 +170,7 @@ def admin():
     <html>
     <head>
         <title>관리자 페이지</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
         <style>
             body {
                 font-family: 'Noto Sans', sans-serif;
@@ -223,13 +231,13 @@ def admin():
             }
         </style>
         <script>
-            function deleteOrder(orderId) {
-                fetch('/delete-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: orderId })
-                }).then(res => res.json()).then(() => location.reload());
-            }
+            var socket = io();
+            socket.on('new_order', function(order) {
+                location.reload();
+            });
+            socket.on('delete_order', function(order) {
+                location.reload();
+            });
         </script>
     </head>
     <body>
@@ -286,4 +294,6 @@ def delete_all_orders():
     return jsonify({"message": "모든 주문이 삭제되었습니다."})
 
 
-
+# WebSocket 실행
+if __name__ == "__main__":
+    socketio.run(app, debug=True, host="0.0.0.0", port=5000)
