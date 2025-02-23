@@ -33,7 +33,7 @@ def order():
             "status": "대기 중"
         }
         db.collection("orders").add(order_data)
-        return jsonify({"message": "주문이 완료되었습니다!"})
+        return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
 
     return render_template_string('''
     <html>
