@@ -159,7 +159,6 @@ def order():
 @app.route("/admin")
 def admin():
     orders_raw = db.collection("orders").order_by("timestamp").stream()  # 주문을 시간순으로 정렬
-    orders_raw = db.collection("orders").stream()
     orders = {}
 
     for order in orders_raw:
