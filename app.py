@@ -207,9 +207,13 @@ def admin():
             .seat .delete-btn {
                 position: absolute;
                 bottom: 5px;
-                font-size: 12px;
-                color: red;
+                font-size: 14px;
+                color: white;
+                background: red;
+                padding: 5px 10px;
+                border-radius: 5px;
                 cursor: pointer;
+                border: none;
             }
             .row {
                 display: flex;
@@ -221,6 +225,19 @@ def admin():
                 flex-direction: column;
                 gap: 10px;
             }
+            .delete-all-btn {
+                margin-top: 20px;
+                padding: 10px 15px;
+                font-size: 16px;
+                background: black;
+                color: white;
+                border: none;
+                cursor: pointer;
+                border-radius: 5px;
+            }
+            .delete-all-btn:hover {
+                background: gray;
+            }
         </style>
         <script>
             function deleteOrder(orderId) {
@@ -229,6 +246,13 @@ def admin():
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: orderId })
                 }).then(res => res.json()).then(() => location.reload());
+            }
+            function deleteAllOrders() {
+                if (confirm('정말 모든 주문을 삭제하시겠습니까?')) {
+                    fetch('/delete-all-orders', {
+                        method: 'POST'
+                    }).then(() => location.reload());
+                }
             }
         </script>
     </head>
@@ -243,7 +267,7 @@ def admin():
                         {% if order %}
                             <div>{{ order.salt }}</div>
                             <div>{{ order.drink }}</div>
-                            <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
+                            <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
                         {% endif %}
                     </div>
                 {% endfor %}
@@ -257,16 +281,18 @@ def admin():
                             {% if order %}
                                 <div>{{ order.salt }}</div>
                                 <div>{{ order.drink }}</div>
-                                <div class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</div>
+                                <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
                             {% endif %}
                         </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
+        <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
     </body>
     </html>
     ''', orders=orders)
+
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
