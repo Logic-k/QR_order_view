@@ -118,7 +118,7 @@ def admin():
     </html>
     ''', orders=orders)
 
-# 개별 주문 삭제 API
+# 개별 주문 삭제 API (2)
 @app.route("/delete-order", methods=["POST"])
 def delete_order():
     order_id = request.json.get("id")
