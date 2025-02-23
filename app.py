@@ -205,15 +205,14 @@ def admin():
                 background: #ffcc00;
             }
             .seat .delete-btn {
-                position: absolute;
-                bottom: 5px;
-                font-size: 14px;
+                font-size: 12px;
                 color: white;
                 background: red;
                 padding: 5px 10px;
                 border-radius: 5px;
                 cursor: pointer;
                 border: none;
+                margin-top: 5px;
             }
             .row {
                 display: flex;
