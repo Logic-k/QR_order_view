@@ -5,6 +5,9 @@ from firebase_admin import credentials, firestore
 from flask import Flask, request, jsonify, render_template_string
 from flask_socketio import SocketIO
 
+port = int(os.environ.get("PORT", 5000))  # Render에서 제공하는 포트를  자동 감지
+socketio.run(app, debug=True, host="0.0.0.0", port=port)
+
 # Flask 애플리케이션 생성
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
