@@ -160,13 +160,17 @@ def order():
 def admin():
     orders_raw = db.collection("orders").order_by("timestamp").stream()  # 주문을 시간순으로 정렬
     orders = {}
+    order_counter = 1  # 주문 순서 번호 지정 (초기화)
 
     for order in orders_raw:
         order_data = order.to_dict()
         seat_number = order_data.get("seat")
-        order_data["order_number"] = order_counter  # 주문에 번호 추가
+        
         if seat_number not in orders:
             orders[seat_number] = []
+        
+        order_data["order_number"] = order_counter  # 주문 번호 추가
+        order_counter += 1  # 주문 순서 증가
         orders[seat_number].append({**order_data, "id": order.id})
 
     return render_template_string('''
