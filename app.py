@@ -161,12 +161,12 @@ def admin():
     orders_raw = db.collection("orders").stream()
     orders = {}
 
-for order in orders_raw:
-    order_data = order.to_dict()
-    seat_number = order_data.get("seat")
-    if seat_number not in orders:
-        orders[seat_number] = []
-    orders[seat_number].append({**order_data, "id": order.id})
+    for order in orders_raw:
+        order_data = order.to_dict()
+        seat_number = order_data.get("seat")
+        if seat_number not in orders:
+            orders[seat_number] = []
+        orders[seat_number].append({**order_data, "id": order.id})
 
     return render_template_string('''
     <html>
