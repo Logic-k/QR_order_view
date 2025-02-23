@@ -254,6 +254,11 @@ def admin():
                 }
             }
         </script>
+    <script>
+            setInterval(() => {
+                location.reload();
+            }, 10000); // 10초마다 새로고침
+        </script>
     </head>
     <body>
         <h2>주문 관리</h2>
