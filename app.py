@@ -158,12 +158,14 @@ def order():
 # 관리자 페이지 (자리 형상화 UI 적용)
 @app.route("/admin")
 def admin():
+    orders_raw = db.collection("orders").order_by("timestamp").stream()  # 주문을 시간순으로 정렬
     orders_raw = db.collection("orders").stream()
     orders = {}
 
     for order in orders_raw:
         order_data = order.to_dict()
         seat_number = order_data.get("seat")
+        order_data["order_number"] = order_counter  # 주문에 번호 추가
         if seat_number not in orders:
             orders[seat_number] = []
         orders[seat_number].append({**order_data, "id": order.id})
@@ -302,6 +304,7 @@ def admin():
                         <div class="seat {% if orders.get(seat_number|string) %}occupied{% endif %}">
                             {{ seat_number }}번
                             {% for order in orders.get(seat_number|string, []) %}
+                                <div>#{{ order.order_number }}</div>
                                 <div>{{ order.salt }}</div>
                                 <div>{{ order.drink }}</div>
                                 <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
