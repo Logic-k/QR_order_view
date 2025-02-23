@@ -158,7 +158,16 @@ def order():
 # 관리자 페이지 (자리 형상화 UI 적용)
 @app.route("/admin")
 def admin():
-    orders = {order.to_dict().get("seat"): {**order.to_dict(), "id": order.id} for order in db.collection("orders").stream()}
+    orders_raw = db.collection("orders").stream()
+    orders = {}
+
+for order in orders_raw:
+    order_data = order.to_dict()
+    seat_number = order_data.get("seat")
+    if seat_number not in orders:
+        orders[seat_number] = []
+    orders[seat_number].append({**order_data, "id": order.id})
+
     return render_template_string('''
     <html>
     <head>
@@ -257,7 +266,7 @@ def admin():
     <script>
             setInterval(() => {
                 location.reload();
-            }, 10000); // 10초마다 새로고침
+            }, 5000); // 5초마다 새로고침
         </script>
     </head>
     <body>
@@ -265,28 +274,26 @@ def admin():
         <div class="layout">
             <div class="column">
                 {% for seat_number in range(9, 13) %}
-                    {% set order = orders.get(seat_number|string) %}
-                    <div class="seat {% if order %}occupied{% endif %}">
+                    <div class="seat {% if orders.get(seat_number|string) %}occupied{% endif %}">
                         {{ seat_number }}번
-                        {% if order %}
+                        {% for order in orders.get(seat_number|string, []) %}
                             <div>{{ order.salt }}</div>
                             <div>{{ order.drink }}</div>
                             <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
-                        {% endif %}
+                        {% endfor %}
                     </div>
                 {% endfor %}
             </div>
             <div class="seat-container">
                 <div class="row">
                     {% for seat_number in range(1, 9) %}
-                        {% set order = orders.get(seat_number|string) %}
-                        <div class="seat {% if order %}occupied{% endif %}">
+                        <div class="seat {% if orders.get(seat_number|string) %}occupied{% endif %}">
                             {{ seat_number }}번
-                            {% if order %}
+                            {% for order in orders.get(seat_number|string, []) %}
                                 <div>{{ order.salt }}</div>
                                 <div>{{ order.drink }}</div>
                                 <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
-                            {% endif %}
+                            {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
@@ -296,7 +303,6 @@ def admin():
     </body>
     </html>
     ''', orders=orders)
-
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
