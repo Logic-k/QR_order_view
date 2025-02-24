@@ -39,7 +39,7 @@ def order():
 
         return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
 
-	return render_template_string('''
+    return render_template_string('''
     <html>
     <head>
         <title>QR 주문</title>
