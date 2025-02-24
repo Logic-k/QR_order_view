@@ -160,6 +160,8 @@ def order():
 def admin():
     orders_raw = db.collection("orders").stream()
     orders = {}
+    orders_list = []  # 주문 로그 리스트
+
 
     for order in orders_raw:
         order_data = order.to_dict()
@@ -167,6 +169,7 @@ def admin():
         if seat_number not in orders:
             orders[seat_number] = []
         orders[seat_number].append({**order_data, "id": order.id})
+        orders_list.append(order_data)  # 🔹 주문 로그 리스트에 추가
 
     return render_template_string('''
     <html>
@@ -246,6 +249,23 @@ def admin():
             .delete-all-btn:hover {
                 background: gray;
             }
+        /* 주문 로그 테이블 스타일 */
+          .log - table{
+            width: 80 %;
+            margin: 30px auto;
+            border - collapse: collapse;
+            background: white;
+            color: black;
+        }
+            .log - table th, .log - table td{
+                border: 1px solid #ddd;
+                padding: 10px;
+                text - align: center;
+        }
+            .log - table th{
+                background: #4CAF50;
+                color: white;
+        }
         </style>
         <script>
             function deleteOrder(orderId) {
@@ -313,9 +333,34 @@ def admin():
             </div>
         </div>
         <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
+    <!-- 주문 로그 추가 -->
+    <h2>📋 주문 로그</h2>
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th>주문번호</th>
+                <th>자리번호</th>
+                <th>족욕 소금</th>
+                <th>음료</th>
+                <th>삭제</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders_list %}
+            <tr>
+                <td>#{{ loop.index }}</td>
+                <td>{{ order.seat }}</td>
+                <td>{{ order.salt }}</td>
+                <td>{{ order.drink }}</td>
+                <td><button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
     </body>
     </html>
-    ''', orders=orders)
+    ''', orders=orders,orders_list=orders_list)
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
