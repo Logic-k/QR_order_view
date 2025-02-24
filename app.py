@@ -22,24 +22,23 @@ else:
 # 주문 페이지
 @app.route("/order", methods=["GET", "POST"])
 def order():
-    seat_number = request.args.get("seat", "1")
+    	seat_number = request.args.get("seat", "1")
 
-    if request.method == "POST":
-        data = request.json
-        order_data = {
-            "seat": seat_number,
-            "salt": data.get("saltType"),
-            "drink": data.get("drink"),
-            "status": "대기 중"
+    	if request.method == "POST":
+        	data = request.json
+        	order_data = {
+            	"seat": seat_number,
+           	 "salt": data.get("saltType"),
+            	"drink": data.get("drink"),
+            	"status": "대기 중"
         }
-        db.collection("orders").add(order_data)
+	db.collection("orders").add(order_data)
+	# 🔹 로그에도 같은 주문 저장 (기록용)
+	db.collection("order_logs").add(order_data)
 
-    	# 🔹 로그에도 같은 주문 저장 (기록용)
-    	db.collection("order_logs").add(order_data)
+	return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
 
-        return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
-
-    return render_template_string('''
+return render_template_string('''
     <html>
     <head>
         <title>QR 주문</title>
