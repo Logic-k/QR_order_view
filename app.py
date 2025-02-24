@@ -32,13 +32,8 @@ def order():
             "drink": data.get("drink"),
             "status": "대기 중"
         }
-    # 🔹 활성 주문에 추가 (관리용)
-    order_ref = db.collection("orders").add(order_data)
-
-    # 🔹 로그에도 같은 주문 저장 (기록용)
-    db.collection("order_logs").add(order_data)
-
-    return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
+        db.collection("orders").add(order_data)
+        return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
 
     return render_template_string('''
     <html>
@@ -173,15 +168,6 @@ def admin():
             orders[seat_number] = []
         orders[seat_number].append({**order_data, "id": order.id})
 
-    # 🔹 'order_logs'는 로그 전용 (기록용)
-    logs_raw = db.collection("order_logs").order_by("timestamp").stream()
-    order_logs = []
-
-    for log in logs_raw:
-        log_data = log.to_dict()
-        log_data["id"] = log.id
-        order_logs.append(log_data)
-
     return render_template_string('''
     <html>
     <head>
@@ -260,23 +246,6 @@ def admin():
             .delete-all-btn:hover {
                 background: gray;
             }
-        /* 주문 로그 테이블 스타일 */
-        .log-table {
-            width: 80%;
-            margin: 30px auto;
-            border-collapse: collapse;
-            background: white;
-            color: black;
-        }
-        .log-table th, .log-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        .log-table th {
-            background: #4CAF50;
-            color: white;
-        }
         </style>
         <script>
             function deleteOrder(orderId) {
@@ -293,13 +262,6 @@ def admin():
                     }).then(() => location.reload());
                 }
             }
-        function deleteLog(orderId) {
-            fetch('/delete-log', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: orderId })
-            }).then(res => res.json()).then(() => location.reload());
-        }
         </script>
     <script>
             setInterval(() => {
@@ -351,33 +313,9 @@ def admin():
             </div>
         </div>
         <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
-    <!-- 🔹 독립적인 주문 로그 -->
-    <h2>📋 주문 로그</h2>
-    <table class="log-table">
-        <thead>
-            <tr>
-                <th>주문번호</th>
-                <th>자리번호</th>
-                <th>족욕 소금</th>
-                <th>음료</th>
-                <th>삭제</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for log in order_logs %}
-            <tr>
-                <td>#{{ loop.index }}</td>
-                <td>{{ log.seat }}</td>
-                <td>{{ log.salt }}</td>
-                <td>{{ log.drink }}</td>
-                <td><button class="delete-btn" onclick="deleteLog('{{ log.id }}')">삭제</button></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
     </body>
     </html>
-    ''', orders=orders,order_logs=order_logs)
+    ''', orders=orders)
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
