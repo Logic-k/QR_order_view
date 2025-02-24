@@ -151,7 +151,7 @@ def order():
     <option value="사과주스(Only ICE)">사과주스(Only ICE) / 苹果汁</option>
     <option value="오렌지주스(Only ICE)">오렌지주스(Only ICE) / 橙汁</option>
 </select><br/>
-            <button onclick="placeOrder()">주문하기 (Order Now)</button>
+            <button id="order-btn" onclick="placeOrder()">주문하기</button>
         </div>
 	<div class="announcement">즐거운 시간 보내세요! (Enjoy your time!) (祝您玩得开心!)</div>
     </body>
