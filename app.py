@@ -105,8 +105,8 @@ def order():
                     body: JSON.stringify({ saltType: salt, drink: drink })
                 }).then(res => res.json()).then(data => {
                     alert(data.message);
-                    document.getElementById('order-btn').disabled = true;  // 🔹 버튼 비활성화
-                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 🔹 상태 저장
+                    document.getElementById('order-btn').disabled = true;  // 버튼 비활성화
+                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 상태 저장
                 });
             }
 
@@ -117,7 +117,12 @@ def order():
                 }
             }
 
-            document.addEventListener("DOMContentLoaded", checkOrderStatus);  // 🔹 페이지 로딩 시 실행
+            function enableOrderButton(seatNumber) {
+                localStorage.setItem(`orderDisabled_${seatNumber}`, "false");
+                document.getElementById('order-btn').disabled = false;
+            }
+
+            document.addEventListener("DOMContentLoaded", checkOrderStatus); 
         </script>
     </head>
     <body>
