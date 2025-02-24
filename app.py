@@ -93,36 +93,55 @@ def order():
                 color: white;
             }
         </style>
-        <script>
+         <script>
+            const seatNumber = "{{ seat_number }}";
+
+        // Firestore 실시간 리스너를 설정하여 주문 상태를 감지
+            function listenToOrderChanges() {
+                db.collection("orders").where("seat", "==", seatNumber)
+                    .onSnapshot((snapshot) = > {
+                    if (snapshot.empty) {
+                        console.log("🛑 주문이 삭제됨 → 버튼 활성화");
+                        localStorage.removeItem(`orderDisabled_${seatNumber
+                    }`);
+                    document.getElementById('order-btn').disabled = false;
+                }
+                     else {
+                         console.log("✅ 주문이 존재 → 버튼 비활성화");
+                         localStorage.setItem(`orderDisabled_${seatNumber
+                    }`, "true");
+                    document.getElementById('order-btn').disabled = true;
+                            }
+                            });
+                        }
+
             function placeOrder() {
-                let seatNumber = "{{ seat_number }}";
                 let salt = document.getElementById('salt').value;
                 let drink = document.getElementById('drink').value;
 
-                fetch(window.location.href, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ saltType: salt, drink: drink })
-                }).then(res => res.json()).then(data => {
-                    alert(data.message);
-                    document.getElementById('order-btn').disabled = true;  // 🔹 버튼 비활성화
-                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 🔹 상태 저장
-                });
+                db.collection("orders").add({
+                    seat: seatNumber,
+                    salt : salt,
+                    drink : drink,
+                    status : "대기 중"
+                    }).then(() = > {
+                    alert("주문이 완료되었습니다!\n(Order Completed!)\n(订单已完成!)");
+                    document.getElementById('order-btn').disabled = true;
+                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true");
+            });
             }
 
             function checkOrderStatus() {
-                let seatNumber = "{{ seat_number }}";
-                if (localStorage.getItem(`orderDisabled_${seatNumber}`) === "true") {
+                if (localStorage.getItem(`orderDisabled_${seatNumber
+            }`) == = "true") {
                     document.getElementById('order-btn').disabled = true;
                 }
             }
 
-            function enableOrderButton(seatNumber) {
-                localStorage.removeItem(`orderDisabled_${seatNumber}`); // 🔹 버튼 활성화
-                document.getElementById('order-btn').disabled = false;
-            }
-
-            document.addEventListener("DOMContentLoaded", checkOrderStatus);
+            document.addEventListener("DOMContentLoaded", () = > {
+                checkOrderStatus();
+                listenToOrderChanges();  // Firestore 실시간 리스너 적용
+            });
         </script>
     </head>
     <body>
