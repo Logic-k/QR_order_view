@@ -105,8 +105,8 @@ def order():
                     body: JSON.stringify({ saltType: salt, drink: drink })
                 }).then(res => res.json()).then(data => {
                     alert(data.message);
-                    document.getElementById('order-btn').disabled = true;  // 버튼 비활성화
-                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 상태 저장
+                    document.getElementById('order-btn').disabled = true;  // 🔹 버튼 비활성화
+                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 🔹 상태 저장
                 });
             }
 
@@ -118,11 +118,11 @@ def order():
             }
 
             function enableOrderButton(seatNumber) {
-                localStorage.setItem(`orderDisabled_${seatNumber}`, "false");
+                localStorage.removeItem(`orderDisabled_${seatNumber}`); // 🔹 버튼 활성화
                 document.getElementById('order-btn').disabled = false;
             }
 
-            document.addEventListener("DOMContentLoaded", checkOrderStatus); 
+            document.addEventListener("DOMContentLoaded", checkOrderStatus);
         </script>
     </head>
     <body>
@@ -257,7 +257,7 @@ def admin():
         </style>
         <script>
             function enableOrderButton(seatNumber) {
-                localStorage.setItem(`orderDisabled_${seatNumber}`, "false");
+                localStorage.removeItem(`orderDisabled_${seatNumber}`);
             }
 
             function deleteOrder(orderId, seatNumber) {
@@ -276,7 +276,7 @@ def admin():
                     fetch('/delete-all-orders', {
                         method: 'POST'
                     }).then(() => {
-                        localStorage.clear(); // 모든 주문 삭제 시 모든 버튼 다시 활성화
+                        localStorage.clear(); // 🔹 모든 주문 삭제 시 모든 자리 버튼 활성화
                         location.reload();
                     });
                 }
