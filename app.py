@@ -332,22 +332,42 @@ def admin():
     </html>
     ''', orders=orders)
 
-# 개별 주문 삭제 API
+# 개별 주문 삭제 API (주문 페이지 버튼 활성화 포함)
 @app.route("/delete-order", methods=["POST"])
 def delete_order():
     order_id = request.json.get("id")
-    if order_id:
+    order_doc = db.collection("orders").document(order_id).get()
+    
+    if order_doc.exists:
+        order_data = order_doc.to_dict()
+        seat_number = order_data.get("seat")
+
+        # 주문 삭제
         db.collection("orders").document(order_id).delete()
-        return jsonify({"message": "주문이 삭제되었습니다."})
+
+        # 주문 페이지 버튼 활성화를 위한 응답 반환
+        return jsonify({
+            "message": "주문이 삭제되었습니다.",
+            "seat": seat_number
+        })
+    
     return jsonify({"error": "유효한 주문 ID가 없습니다."}), 400
 
-# 모든 주문 삭제 API
+# 모든 주문 삭제 API (주문 페이지 버튼 활성화 포함)
 @app.route("/delete-all-orders", methods=["POST"])
 def delete_all_orders():
     orders = db.collection("orders").stream()
+    seat_numbers = set()
+
     for order in orders:
-        db.collection("orders").document(order.id).delete()
-    return jsonify({"message": "모든 주문이 삭제되었습니다."})
+        order_data = order.to_dict()
+        seat_numbers.add(order_data.get("seat"))  # 모든 좌석 번호 저장
+        db.collection("orders").document(order.id).delete()  # 주문 삭제
+
+    return jsonify({
+        "message": "모든 주문이 삭제되었습니다.",
+        "seats": list(seat_numbers)  # 삭제된 좌석 번호 목록 반환
+    })
 
 
 
