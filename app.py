@@ -94,45 +94,28 @@ def order():
             }
         </style>
         <script>
-        // 🔹 주문 버튼 상태 확인 후 업데이트
-        function checkOrderStatus() {
-            let seatNumber = "{{ seat_number }}";
-            if (localStorage.getItem(`orderDisabled_${seatNumber
-        }`) == = "true") {
-                document.getElementById('order-btn').disabled = true;  // 🚫 비활성화
-            }
-            }
-
-            // 🔹 주문하기 버튼 클릭 시 상태 저장 & 버튼 비활성화
             function placeOrder() {
-                let seatNumber = "{{ seat_number }}";
                 let salt = document.getElementById('salt').value;
                 let drink = document.getElementById('drink').value;
-
                 fetch(window.location.href, {
                     method: 'POST',
-                    headers : { 'Content-Type': 'application/json' },
-                    body : JSON.stringify({ saltType: salt, drink : drink })
-                    }).then(res = > res.json()).then(data = > {
-                    alert(data.message);
-                    document.getElementById('order-btn').disabled = true;  // 🚫 버튼 비활성화
-                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 상태 저장
-            });
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ saltType: salt, drink: drink })
+                }).then(res => res.json()).then(data => alert(data.message));
             }
-
-            // 🔹 삭제 버튼 클릭 시 주문 상태 제거 & 버튼 다시 활성화
-            function resetOrderStatus(seatNumber) {
-                localStorage.removeItem(`orderDisabled_${seatNumber
-            }`);
-            let orderBtn = document.getElementById('order-btn');
-            if (orderBtn) {
-                orderBtn.disabled = false;  // 🔄 버튼 다시 활성화
+            function deleteOrder(orderId) {
+                fetch('/delete-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: orderId })
+                }).then(() => window.location.reload());
             }
+            function deleteAllOrders() {
+                fetch('/delete-all-orders', {
+                    method: 'POST'
+                }).then(() => window.location.reload());
             }
-
-            // 🔹 페이지 로드 시 버튼 상태 확인
-            document.addEventListener("DOMContentLoaded", checkOrderStatus);        
-	</script>
+        </script>
     </head>
     <body>
 	<div class="announcement">
@@ -165,7 +148,7 @@ def order():
     <option value="사과주스(Only ICE)">사과주스(Only ICE) / 苹果汁</option>
     <option value="오렌지주스(Only ICE)">오렌지주스(Only ICE) / 橙汁</option>
 </select><br/>
-            <button id="order-btn" onclick="placeOrder()">주문하기</button>
+            <button onclick="placeOrder()">주문하기 (Order Now)</button>
         </div>
 	<div class="announcement">즐거운 시간 보내세요! (Enjoy your time!) (祝您玩得开心!)</div>
     </body>
@@ -265,50 +248,39 @@ def admin():
             }
         </style>
         <script>
-        function deleteOrder(orderId, seatNumber) {
-            fetch('/delete-order', {
-                method: 'POST',
-                headers : { 'Content-Type': 'application/json' },
-                body : JSON.stringify({ id: orderId })
-                }).then(res = > res.json()).then(() = > {
-                resetOrderStatus(seatNumber);  // 🚀 주문 삭제 시 버튼 다시 활성화
-                location.reload();
-            });
-        }
-
-        function deleteAllOrders() {
-            if (confirm('정말 모든 주문을 삭제하시겠습니까?')) {
-                fetch('/delete-all-orders', {
-                    method: 'POST'
-                    }).then(() = > {
-                    // 모든 주문 삭제 후 모든 자리의 버튼 활성화
-                    for (let i = 1; i <= 12; i++) {
-                        resetOrderStatus(i);
-                    }
-                    location.reload();
-                });
+            function deleteOrder(orderId) {
+                fetch('/delete-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: orderId })
+                }).then(res => res.json()).then(() => location.reload());
             }
-        }
-        </script> 
-	<script>
+            function deleteAllOrders() {
+                if (confirm('정말 모든 주문을 삭제하시겠습니까?')) {
+                    fetch('/delete-all-orders', {
+                        method: 'POST'
+                    }).then(() => location.reload());
+                }
+            }
+        </script>
+    <script>
             setInterval(() => {
                 location.reload();
             }, 5000); // 5초마다 새로고침
         </script>
-        <script>
-            let refreshTime = 5; // 새로고침 간격 (초 단위)
-        function updateTimer() {
-            document.getElementById('refresh-timer').innerText = `새로고침까지 ${ refreshTime }초`;
-                refreshTime--;
-            if (refreshTime < 0) {
-                location.reload();
-            }
-            else {
-                setTimeout(updateTimer, 1000);
-            }
+    <script>
+    let refreshTime = 5; // 새로고침 간격 (초 단위)
+    function updateTimer() {
+        document.getElementById('refresh-timer').innerText = `새로고침까지 ${refreshTime}초`;
+        refreshTime--;
+        if (refreshTime < 0) {
+            location.reload();
+        } else {
+            setTimeout(updateTimer, 1000);
         }
-        document.addEventListener("DOMContentLoaded", updateTimer);
-        </script>    
+    }
+    document.addEventListener("DOMContentLoaded", updateTimer);
+</script>    
 </head>
     <body>
         <h2>주문 관리</h2>
@@ -320,7 +292,7 @@ def admin():
                         {% for order in orders.get(seat_number|string, []) %}
                             <div>{{ order.salt }}</div>
                             <div>{{ order.drink }}</div>
-                            <button onclick="deleteOrder('{{ order.id }}', '{{ seat_number }}')">삭제</button>
+                            <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
                         {% endfor %}
                     </div>
                 {% endfor %}
@@ -333,18 +305,17 @@ def admin():
                             {% for order in orders.get(seat_number|string, []) %}
                                 <div>{{ order.salt }}</div>
                                 <div>{{ order.drink }}</div>
-                                <button onclick="deleteOrder('{{ order.id }}', '{{ seat_number }}')">삭제</button>
+                                <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
                             {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
-        <button onclick="deleteAllOrders()">모든 주문 삭제</button>
+        <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
     </body>
     </html>
     ''', orders=orders)
-
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
@@ -362,4 +333,6 @@ def delete_all_orders():
     for order in orders:
         db.collection("orders").document(order.id).delete()
     return jsonify({"message": "모든 주문이 삭제되었습니다."})
+
+
 
