@@ -93,56 +93,46 @@ def order():
                 color: white;
             }
         </style>
-         <script>
-            const seatNumber = "{{ seat_number }}";
+        <script>
+        // 🔹 주문 버튼 상태 확인 후 업데이트
+        function checkOrderStatus() {
+            let seatNumber = "{{ seat_number }}";
+            if (localStorage.getItem(`orderDisabled_${seatNumber
+        }`) == = "true") {
+                document.getElementById('order-btn').disabled = true;  // 🚫 비활성화
+            }
+            }
 
-        // Firestore 실시간 리스너를 설정하여 주문 상태를 감지
-            function listenToOrderChanges() {
-                db.collection("orders").where("seat", "==", seatNumber)
-                    .onSnapshot((snapshot) = > {
-                    if (snapshot.empty) {
-                        console.log("🛑 주문이 삭제됨 → 버튼 활성화");
-                        localStorage.removeItem(`orderDisabled_${seatNumber
-                    }`);
-                    document.getElementById('order-btn').disabled = false;
-                }
-                     else {
-                         console.log("✅ 주문이 존재 → 버튼 비활성화");
-                         localStorage.setItem(`orderDisabled_${seatNumber
-                    }`, "true");
-                    document.getElementById('order-btn').disabled = true;
-                            }
-                            });
-                        }
-
+            // 🔹 주문하기 버튼 클릭 시 상태 저장 & 버튼 비활성화
             function placeOrder() {
+                let seatNumber = "{{ seat_number }}";
                 let salt = document.getElementById('salt').value;
                 let drink = document.getElementById('drink').value;
 
-                db.collection("orders").add({
-                    seat: seatNumber,
-                    salt : salt,
-                    drink : drink,
-                    status : "대기 중"
-                    }).then(() = > {
-                    alert("주문이 완료되었습니다!\n(Order Completed!)\n(订单已完成!)");
-                    document.getElementById('order-btn').disabled = true;
-                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true");
+                fetch(window.location.href, {
+                    method: 'POST',
+                    headers : { 'Content-Type': 'application/json' },
+                    body : JSON.stringify({ saltType: salt, drink : drink })
+                    }).then(res = > res.json()).then(data = > {
+                    alert(data.message);
+                    document.getElementById('order-btn').disabled = true;  // 🚫 버튼 비활성화
+                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 상태 저장
             });
             }
 
-            function checkOrderStatus() {
-                if (localStorage.getItem(`orderDisabled_${seatNumber
-            }`) == = "true") {
-                    document.getElementById('order-btn').disabled = true;
-                }
+            // 🔹 삭제 버튼 클릭 시 주문 상태 제거 & 버튼 다시 활성화
+            function resetOrderStatus(seatNumber) {
+                localStorage.removeItem(`orderDisabled_${seatNumber
+            }`);
+            let orderBtn = document.getElementById('order-btn');
+            if (orderBtn) {
+                orderBtn.disabled = false;  // 🔄 버튼 다시 활성화
+            }
             }
 
-            document.addEventListener("DOMContentLoaded", () = > {
-                checkOrderStatus();
-                listenToOrderChanges();  // Firestore 실시간 리스너 적용
-            });
-        </script>
+            // 🔹 페이지 로드 시 버튼 상태 확인
+            document.addEventListener("DOMContentLoaded", checkOrderStatus);        
+	</script>
     </head>
     <body>
 	<div class="announcement">
@@ -275,31 +265,30 @@ def admin():
             }
         </style>
         <script>
-            function enableOrderButton(seatNumber) {
-                localStorage.removeItem(`orderDisabled_${seatNumber}`);
-            }
+        function deleteOrder(orderId, seatNumber) {
+            fetch('/delete-order', {
+                method: 'POST',
+                headers : { 'Content-Type': 'application/json' },
+                body : JSON.stringify({ id: orderId })
+                }).then(res = > res.json()).then(() = > {
+                resetOrderStatus(seatNumber);  // 🚀 주문 삭제 시 버튼 다시 활성화
+                location.reload();
+            });
+        }
 
-            function deleteOrder(orderId, seatNumber) {
-                fetch('/delete-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: orderId })
-                }).then(res => res.json()).then(() => {
-                    enableOrderButton(seatNumber); // 주문 삭제 후 버튼 활성화
+        function deleteAllOrders() {
+            if (confirm('정말 모든 주문을 삭제하시겠습니까?')) {
+                fetch('/delete-all-orders', {
+                    method: 'POST'
+                    }).then(() = > {
+                    // 모든 주문 삭제 후 모든 자리의 버튼 활성화
+                    for (let i = 1; i <= 12; i++) {
+                        resetOrderStatus(i);
+                    }
                     location.reload();
                 });
             }
-
-            function deleteAllOrders() {
-                if (confirm('정말 모든 주문을 삭제하시겠습니까?')) {
-                    fetch('/delete-all-orders', {
-                        method: 'POST'
-                    }).then(() => {
-                        localStorage.clear(); // 🔹 모든 주문 삭제 시 모든 자리 버튼 활성화
-                        location.reload();
-                    });
-                }
-            }
+        }
         </script> 
 	<script>
             setInterval(() => {
