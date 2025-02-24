@@ -94,30 +94,30 @@ def order():
             }
         </style>
         <script>
-     	function placeOrder() {
-        	let seatNumber = "{{ seat_number }}";
-        	let salt = document.getElementById('salt').value;
-        	let drink = document.getElementById('drink').value;
+            function placeOrder() {
+                let seatNumber = "{{ seat_number }}";
+                let salt = document.getElementById('salt').value;
+                let drink = document.getElementById('drink').value;
 
-        	fetch(window.location.href, {
-           		method: 'POST',
-            		headers: { 'Content-Type': 'application/json' },
-            		body: JSON.stringify({ saltType: salt, drink: drink })
-        	}).then(res => res.json()).then(data => {
-            		alert(data.message);
-            		document.getElementById('order-btn').disabled = true;
-            		localStorage.setItem(`orderDisabled_${seatNumber}`, "true");
-        	});
-    	}
+                fetch(window.location.href, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ saltType: salt, drink: drink })
+                }).then(res => res.json()).then(data => {
+                    alert(data.message);
+                    document.getElementById('order-btn').disabled = true;  // 🔹 버튼 비활성화
+                    localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 🔹 상태 저장
+                });
+            }
 
-    	function checkOrderStatus() {
-        	let seatNumber = "{{ seat_number }}";
-        	if (localStorage.getItem(`orderDisabled_${seatNumber}`) === "true") {
-            		document.getElementById('order-btn').disabled = true;
-        	}
-    	}
+            function checkOrderStatus() {
+                let seatNumber = "{{ seat_number }}";
+                if (localStorage.getItem(`orderDisabled_${seatNumber}`) === "true") {
+                    document.getElementById('order-btn').disabled = true;
+                }
+            }
 
-    	document.addEventListener("DOMContentLoaded", checkOrderStatus);
+            document.addEventListener("DOMContentLoaded", checkOrderStatus);  // 🔹 페이지 로딩 시 실행
         </script>
     </head>
     <body>
@@ -250,74 +250,33 @@ def admin():
                 background: gray;
             }
         </style>
-    <script>
-    const db = firebase.firestore();
-
-    // 주문 버튼 상태를 변경하는 함수
-    function updateOrderButton(seatNumber, enable) {
-        let orderBtn = document.getElementById(`order-btn - ${ seatNumber }`);
-        if (orderBtn) {
-            orderBtn.disabled = !enable; // 주문 버튼 활성화/비활성화
-            if (enable) {
-                localStorage.removeItem(`orderDisabled_${seatNumber
-            }`); // 비활성화 기록 삭제
-        }
-        else {
-            localStorage.setItem(`orderDisabled_${seatNumber
-        }`, "true"); // 비활성화 기록 추가
-    }
+        <script>
+            function updateOrderButton(seatNumber, enable) {
+                localStorage.setItem(`orderDisabled_${seatNumber}`, enable ? "false" : "true");
             }
-        }
 
-        // Firestore에서 주문 삭제 시 버튼 상태 변경
-        function listenForOrderChanges() {
-            db.collection("orders").onSnapshot((snapshot) = > {
-                snapshot.docChanges().forEach((change) = > {
-                    if (change.type == = "removed") {
-                        let orderData = change.doc.data();
-                        let seatNumber = orderData.seat;
-                        updateOrderButton(seatNumber, true); // 주문이 삭제되면 버튼 활성화
-                    }
+            function deleteOrder(orderId, seatNumber) {
+                fetch('/delete-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: orderId })
+                }).then(res => res.json()).then(() => {
+                    updateOrderButton(seatNumber, true); // 주문 삭제 후 버튼 활성화
+                    location.reload();
                 });
-            });
-        }
+            }
 
-        // 선택 주문 삭제
-        function deleteOrder(orderId, seatNumber) {
-            db.collection("orders").doc(orderId).delete().then(() = > {
-                updateOrderButton(seatNumber, true); // 주문 삭제 후 버튼 활성화
-            });
-        }
-
-        // 모든 주문 삭제
-        function deleteAllOrders() {
-            db.collection("orders").get().then((querySnapshot) = > {
-                querySnapshot.forEach((doc) = > {
-                    doc.ref.delete();
-                });
-                localStorage.clear(); // 모든 주문 삭제 시 모든 좌석 버튼 다시 활성화
-                setTimeout(() = > {
-                    location.reload(); // 새로고침하여 UI 갱신
-                }, 500);
-            });
-        }
-
-        // 페이지 로드 시 버튼 상태 확인
-        function checkOrderStatus() {
-            document.querySelectorAll(".order-btn").forEach((btn) = > {
-                let seatNumber = btn.getAttribute("data-seat");
-                if (localStorage.getItem(`orderDisabled_${seatNumber}`) == = "true") {
-                    btn.disabled = true; // 비활성화 상태 유지
+            function deleteAllOrders() {
+                if (confirm('정말 모든 주문을 삭제하시겠습니까?')) {
+                    fetch('/delete-all-orders', {
+                        method: 'POST'
+                    }).then(() => {
+                        localStorage.clear(); // 모든 주문 삭제 시 모든 버튼 다시 활성화
+                        location.reload();
+                    });
                 }
-        });
-        }
-
-        document.addEventListener("DOMContentLoaded", () = > {
-            checkOrderStatus();
-            listenForOrderChanges();
-        });
-
-        </script>    
+            }
+        </script> 
 	<script>
             setInterval(() => {
                 location.reload();
@@ -373,42 +332,22 @@ def admin():
     </html>
     ''', orders=orders)
 
-# 개별 주문 삭제 API (주문 페이지 버튼 활성화 포함)
+
+# 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
 def delete_order():
     order_id = request.json.get("id")
-    order_doc = db.collection("orders").document(order_id).get()
-    
-    if order_doc.exists:
-        order_data = order_doc.to_dict()
-        seat_number = order_data.get("seat")
-
-        # 주문 삭제
+    if order_id:
         db.collection("orders").document(order_id).delete()
-
-        # 주문 페이지 버튼 활성화를 위한 응답 반환
-        return jsonify({
-            "message": "주문이 삭제되었습니다.",
-            "seat": seat_number
-        })
-    
+        return jsonify({"message": "주문이 삭제되었습니다."})
     return jsonify({"error": "유효한 주문 ID가 없습니다."}), 400
 
-# 모든 주문 삭제 API (주문 페이지 버튼 활성화 포함)
+# 모든 주문 삭제 API
 @app.route("/delete-all-orders", methods=["POST"])
 def delete_all_orders():
     orders = db.collection("orders").stream()
-    seat_numbers = set()
-
     for order in orders:
-        order_data = order.to_dict()
-        seat_numbers.add(order_data.get("seat"))  # 모든 좌석 번호 저장
-        db.collection("orders").document(order.id).delete()  # 주문 삭제
-
-    return jsonify({
-        "message": "모든 주문이 삭제되었습니다.",
-        "seats": list(seat_numbers)  # 삭제된 좌석 번호 목록 반환
-    })
-
+        db.collection("orders").document(order.id).delete()
+    return jsonify({"message": "모든 주문이 삭제되었습니다."})
 
 
