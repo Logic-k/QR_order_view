@@ -250,52 +250,93 @@ def admin():
                 background: gray;
             }
         </style>
-        <script>
-    	function deleteOrder(orderId, seatNumber) {
-        	fetch('/delete-order', {
-            		method: 'POST',
-            		headers: { 'Content-Type': 'application/json' },
-            		body: JSON.stringify({ id: orderId })
-        	}).then(res => res.json()).then(data => {
-            		if (data.seat) {
-                		localStorage.removeItem(`orderDisabled_${data.seat}`);  // 🔹 주문 삭제 후 버튼 활성화
-            		}
-            		location.reload();
-        		});
-    		}
-    	    function deleteAllOrders() {
-        	if (confirm('정말 모든 주문을 삭제하시겠습니까?')) {
-            	fetch('/delete-all-orders', {
-                	method: 'POST'
-            	}).then(res => res.json()).then(data => {
-                	if (data.seats) {
-                    		data.seats.forEach(seat => {
-                        		localStorage.removeItem(`orderDisabled_${seat}`);  // 🔹 모든 주문 삭제 후 버튼 활성화
-                    		});
-                	}
-                	location.reload();
-            	});
-        }
-    }        
-    	</script>
     <script>
+    const db = firebase.firestore();
+
+    // 주문 버튼 상태를 변경하는 함수
+    function updateOrderButton(seatNumber, enable) {
+        let orderBtn = document.getElementById(`order-btn - ${ seatNumber }`);
+        if (orderBtn) {
+            orderBtn.disabled = !enable; // 주문 버튼 활성화/비활성화
+            if (enable) {
+                localStorage.removeItem(`orderDisabled_${seatNumber
+            }`); // 비활성화 기록 삭제
+        }
+        else {
+            localStorage.setItem(`orderDisabled_${seatNumber
+        }`, "true"); // 비활성화 기록 추가
+    }
+            }
+        }
+
+        // Firestore에서 주문 삭제 시 버튼 상태 변경
+        function listenForOrderChanges() {
+            db.collection("orders").onSnapshot((snapshot) = > {
+                snapshot.docChanges().forEach((change) = > {
+                    if (change.type == = "removed") {
+                        let orderData = change.doc.data();
+                        let seatNumber = orderData.seat;
+                        updateOrderButton(seatNumber, true); // 주문이 삭제되면 버튼 활성화
+                    }
+                });
+            });
+        }
+
+        // 선택 주문 삭제
+        function deleteOrder(orderId, seatNumber) {
+            db.collection("orders").doc(orderId).delete().then(() = > {
+                updateOrderButton(seatNumber, true); // 주문 삭제 후 버튼 활성화
+            });
+        }
+
+        // 모든 주문 삭제
+        function deleteAllOrders() {
+            db.collection("orders").get().then((querySnapshot) = > {
+                querySnapshot.forEach((doc) = > {
+                    doc.ref.delete();
+                });
+                localStorage.clear(); // 모든 주문 삭제 시 모든 좌석 버튼 다시 활성화
+                setTimeout(() = > {
+                    location.reload(); // 새로고침하여 UI 갱신
+                }, 500);
+            });
+        }
+
+        // 페이지 로드 시 버튼 상태 확인
+        function checkOrderStatus() {
+            document.querySelectorAll(".order-btn").forEach((btn) = > {
+                let seatNumber = btn.getAttribute("data-seat");
+                if (localStorage.getItem(`orderDisabled_${seatNumber}`) == = "true") {
+                    btn.disabled = true; // 비활성화 상태 유지
+                }
+        });
+        }
+
+        document.addEventListener("DOMContentLoaded", () = > {
+            checkOrderStatus();
+            listenForOrderChanges();
+        });
+
+        </script>    
+	<script>
             setInterval(() => {
                 location.reload();
             }, 5000); // 5초마다 새로고침
         </script>
-    <script>
-    let refreshTime = 5; // 새로고침 간격 (초 단위)
-    function updateTimer() {
-        document.getElementById('refresh-timer').innerText = `새로고침까지 ${refreshTime}초`;
-        refreshTime--;
-        if (refreshTime < 0) {
-            location.reload();
-        } else {
-            setTimeout(updateTimer, 1000);
+        <script>
+            let refreshTime = 5; // 새로고침 간격 (초 단위)
+        function updateTimer() {
+            document.getElementById('refresh-timer').innerText = `새로고침까지 ${ refreshTime }초`;
+                refreshTime--;
+            if (refreshTime < 0) {
+                location.reload();
+            }
+            else {
+                setTimeout(updateTimer, 1000);
+            }
         }
-    }
-    document.addEventListener("DOMContentLoaded", updateTimer);
-     </script>    
+        document.addEventListener("DOMContentLoaded", updateTimer);
+        </script>    
 </head>
     <body>
         <h2>주문 관리</h2>
