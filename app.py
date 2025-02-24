@@ -31,8 +31,15 @@ def order():
             "salt": data.get("saltType"),
             "drink": data.get("drink"),
             "status": "대기 중"
+            "timestamp": firestore.SERVER_TIMESTAMP  # 🔹 시간 추가
+
         }
         db.collection("orders").add(order_data)
+    	# 🔹 활성 주문에 추가 (관리용)
+    	order_ref = db.collection("orders").add(order_data)
+
+    	# 🔹 로그에도 같은 주문 저장 (기록용)
+    	db.collection("order_logs").add(order_data)
         return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
 
     return render_template_string('''
@@ -160,8 +167,6 @@ def order():
 def admin():
     orders_raw = db.collection("orders").stream()
     orders = {}
-    orders_list = []  # 주문 로그 리스트
-
 
     for order in orders_raw:
         order_data = order.to_dict()
@@ -169,7 +174,15 @@ def admin():
         if seat_number not in orders:
             orders[seat_number] = []
         orders[seat_number].append({**order_data, "id": order.id})
-        orders_list.append(order_data)  # 🔹 주문 로그 리스트에 추가
+
+    # 🔹 'order_logs'는 로그 전용 (기록용)
+    logs_raw = db.collection("order_logs").order_by("timestamp").stream()
+    order_logs = []
+
+    for log in logs_raw:
+        log_data = log.to_dict()
+        log_data["id"] = log.id
+        order_logs.append(log_data)
 
     return render_template_string('''
     <html>
@@ -282,6 +295,13 @@ def admin():
                     }).then(() => location.reload());
                 }
             }
+            function deleteLog(orderId) {
+           	 fetch('/delete-log', {
+                	method: 'POST',
+                	headers : { 'Content-Type': 'application/json' },
+                	body : JSON.stringify({ id: orderId })
+                	}).then(res = > res.json()).then(() = > location.reload());
+        	}
         </script>
     <script>
             setInterval(() => {
@@ -357,7 +377,6 @@ def admin():
             {% endfor %}
         </tbody>
     </table>
-    <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
     </body>
     </html>
     ''', orders=orders,orders_list=orders_list)
