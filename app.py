@@ -377,7 +377,7 @@ def admin():
     </table>
     </body>
     </html>
-    ''', orders=orders,orders_list=orders_list)
+    ''', orders=orders,order_logs=order_logs)
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
