@@ -251,8 +251,8 @@ def admin():
             }
         </style>
         <script>
-            function updateOrderButton(seatNumber, enable) {
-                localStorage.setItem(`orderDisabled_${seatNumber}`, enable ? "false" : "true");
+            function enableOrderButton(seatNumber) {
+                localStorage.setItem(`orderDisabled_${seatNumber}`, "false");
             }
 
             function deleteOrder(orderId, seatNumber) {
@@ -261,7 +261,7 @@ def admin():
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: orderId })
                 }).then(res => res.json()).then(() => {
-                    updateOrderButton(seatNumber, true); // 주문 삭제 후 버튼 활성화
+                    enableOrderButton(seatNumber); // 주문 삭제 후 버튼 활성화
                     location.reload();
                 });
             }
@@ -307,7 +307,7 @@ def admin():
                         {% for order in orders.get(seat_number|string, []) %}
                             <div>{{ order.salt }}</div>
                             <div>{{ order.drink }}</div>
-                            <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
+                            <button onclick="deleteOrder('{{ order.id }}', '{{ seat_number }}')">삭제</button>
                         {% endfor %}
                     </div>
                 {% endfor %}
@@ -320,14 +320,14 @@ def admin():
                             {% for order in orders.get(seat_number|string, []) %}
                                 <div>{{ order.salt }}</div>
                                 <div>{{ order.drink }}</div>
-                                <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
+                                <button onclick="deleteOrder('{{ order.id }}', '{{ seat_number }}')">삭제</button>
                             {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
-        <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
+        <button onclick="deleteAllOrders()">모든 주문 삭제</button>
     </body>
     </html>
     ''', orders=orders)
@@ -349,5 +349,4 @@ def delete_all_orders():
     for order in orders:
         db.collection("orders").document(order.id).delete()
     return jsonify({"message": "모든 주문이 삭제되었습니다."})
-
 
