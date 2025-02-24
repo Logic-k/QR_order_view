@@ -32,15 +32,15 @@ def order():
             "drink": data.get("drink"),
             "status": "대기 중"
         }
-    db.collection("orders").add(order_data)
-    # 🔹 활성 주문에 추가 (관리용)
-    order_ref = db.collection("orders").add(order_data)
+db.collection("orders").add(order_data)
+# 🔹 활성 주문에 추가 (관리용)
+order_ref = db.collection("orders").add(order_data)
 
-    # 🔹 로그에도 같은 주문 저장 (기록용)
-    db.collection("order_logs").add(order_data)
-    return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
+# 🔹 로그에도 같은 주문 저장 (기록용)
+db.collection("order_logs").add(order_data)
+return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
 
-    return render_template_string('''
+return render_template_string('''
     <html>
     <head>
         <title>QR 주문</title>
