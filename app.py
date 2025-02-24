@@ -31,7 +31,7 @@ def order():
             "salt": data.get("saltType"),
             "drink": data.get("drink"),
             "status": "대기 중"
-            "timestamp": firestore.SERVER_TIMESTAMP  # 🔹 시간 추가
+            "timestamp": firestore.firestore.SERVER_TIMESTAMP  # 🔹 시간 추가
 
         }
         db.collection("orders").add(order_data)
