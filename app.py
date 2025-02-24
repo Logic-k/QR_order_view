@@ -22,23 +22,25 @@ else:
 # 주문 페이지
 @app.route("/order", methods=["GET", "POST"])
 def order():
-    	seat_number = request.args.get("seat", "1")
+    seat_number = request.args.get("seat", "1")
 
-    	if request.method == "POST":
-        	data = request.json
-        	order_data = {
-            	"seat": seat_number,
-           	 "salt": data.get("saltType"),
-            	"drink": data.get("drink"),
-            	"status": "대기 중"
+    if request.method == "POST":
+        data = request.json
+        order_data = {
+            "seat": seat_number,
+            "salt": data.get("saltType"),
+            "drink": data.get("drink"),
+            "status": "대기 중"
         }
-	db.collection("orders").add(order_data)
-	# 🔹 로그에도 같은 주문 저장 (기록용)
-	db.collection("order_logs").add(order_data)
+    # 🔹 활성 주문에 추가 (관리용)
+    order_ref = db.collection("orders").add(order_data)
 
-	return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
+    # 🔹 로그에도 같은 주문 저장 (기록용)
+    db.collection("order_logs").add(order_data)
 
-return render_template_string('''
+    return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
+
+    return render_template_string('''
     <html>
     <head>
         <title>QR 주문</title>
@@ -259,21 +261,21 @@ def admin():
                 background: gray;
             }
         /* 주문 로그 테이블 스타일 */
-          .log - table{
-            width: 80 %;
+        .log-table {
+            width: 80%;
             margin: 30px auto;
-            border - collapse: collapse;
+            border-collapse: collapse;
             background: white;
             color: black;
         }
-            .log - table th, .log - table td{
-                border: 1px solid #ddd;
-                padding: 10px;
-                text - align: center;
+        .log-table th, .log-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
         }
-            .log - table th{
-                background: #4CAF50;
-                color: white;
+        .log-table th {
+            background: #4CAF50;
+            color: white;
         }
         </style>
         <script>
@@ -291,13 +293,13 @@ def admin():
                     }).then(() => location.reload());
                 }
             }
-            function deleteLog(orderId) {
-           	 fetch('/delete-log', {
-                	method: 'POST',
-                	headers : { 'Content-Type': 'application/json' },
-                	body : JSON.stringify({ id: orderId })
-                	}).then(res = > res.json()).then(() = > location.reload());
-        	}
+        function deleteLog(orderId) {
+            fetch('/delete-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: orderId })
+            }).then(res => res.json()).then(() => location.reload());
+        }
         </script>
     <script>
             setInterval(() => {
@@ -349,7 +351,7 @@ def admin():
             </div>
         </div>
         <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
-    <!-- 주문 로그 추가 -->
+    <!-- 🔹 독립적인 주문 로그 -->
     <h2>📋 주문 로그</h2>
     <table class="log-table">
         <thead>
@@ -362,13 +364,13 @@ def admin():
             </tr>
         </thead>
         <tbody>
-            {% for order in orders_list %}
+            {% for log in order_logs %}
             <tr>
                 <td>#{{ loop.index }}</td>
-                <td>{{ order.seat }}</td>
-                <td>{{ order.salt }}</td>
-                <td>{{ order.drink }}</td>
-                <td><button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button></td>
+                <td>{{ log.seat }}</td>
+                <td>{{ log.salt }}</td>
+                <td>{{ log.drink }}</td>
+                <td><button class="delete-btn" onclick="deleteLog('{{ log.id }}')">삭제</button></td>
             </tr>
             {% endfor %}
         </tbody>
