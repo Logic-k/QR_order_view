@@ -40,6 +40,36 @@ def order():
     <head>
         <title>QR 주문</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+    	<script>
+        function placeOrder() {
+            let seatNumber = "{{ seat_number }}";
+            let salt = document.getElementById('salt').value;
+            let drink = document.getElementById('drink').value;
+
+            db.collection("orders").add({
+                seat: seatNumber,
+                salt: salt,
+                drink: drink,
+                status: "대기 중"
+            }).then(() => {
+                alert("주문이 완료되었습니다!\n(Order Completed!)\n(订单已完成!)");
+                document.getElementById('order-btn').disabled = true;  // 🔹 버튼 비활성화
+                localStorage.setItem(`orderDisabled_${seatNumber}`, "true"); // 🔹 상태 저장
+            });
+        }
+
+        // 🔹 새로고침해도 버튼 비활성화 유지
+        function checkOrderStatus() {
+            let seatNumber = "{{ seat_number }}";
+            if (localStorage.getItem(`orderDisabled_${seatNumber}`) === "true") {
+                document.getElementById('order-btn').disabled = true;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", checkOrderStatus);  // 🔹 페이지 로딩 시 실행
+    	</script>
+
+
         <style>
             body {
                 font-family: 'Noto Sans', sans-serif;
@@ -91,6 +121,10 @@ def order():
             th {
                 background-color: #4CAF50;
                 color: white;
+            }
+             button:disabled {  /* 🔹 버튼 비활성화 스타일 추가 */
+            	background-color: gray;
+            	cursor: not-allowed;
             }
         </style>
         <script>
@@ -172,6 +206,56 @@ def admin():
     <html>
     <head>
         <title>관리자 페이지</title>
+        <script src="https://www.gstatic.com/firebasejs/9.8.4/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.8.4/firebase-firestore.js"></script>
+
+        <script>
+            const firebaseConfig = {
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_AUTH_DOMAIN",
+                projectId: "test",
+                storageBucket: "YOUR_STORAGE_BUCKET",
+                messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+                appId: "YOUR_APP_ID"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+
+            function updateOrders() {
+                db.collection("orders").orderBy("timestamp").onSnapshot((snapshot) => {
+                    let ordersHTML = "";
+                    snapshot.forEach((doc) => {
+                        let order = doc.data();
+                        ordersHTML += `
+                            <div class="seat occupied">
+                                <div>자리 ${order.seat}번</div>
+                                <div>#${order.order_number}</div>
+                                <div>${order.salt}</div>
+                                <div>${order.drink}</div>
+                                <button class="delete-btn" onclick="deleteOrder('${doc.id}')">삭제</button>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById("orders-container").innerHTML = ordersHTML;
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", updateOrders);
+
+            function deleteOrder(orderId) {
+                db.collection("orders").doc(orderId).delete();
+            }
+
+            function deleteAllOrders() {
+                db.collection("orders").get().then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        doc.ref.delete();
+                    });
+                });
+            }
+        </script>
         <style>
             body {
                 font-family: 'Noto Sans', sans-serif;
@@ -263,24 +347,7 @@ def admin():
                 }
             }
         </script>
-    <script>
-            setInterval(() => {
-                location.reload();
-            }, 5000); // 5초마다 새로고침
-        </script>
-    <script>
-    let refreshTime = 5; // 새로고침 간격 (초 단위)
-    function updateTimer() {
-        document.getElementById('refresh-timer').innerText = `새로고침까지 ${refreshTime}초`;
-        refreshTime--;
-        if (refreshTime < 0) {
-            location.reload();
-        } else {
-            setTimeout(updateTimer, 1000);
-        }
-    }
-    document.addEventListener("DOMContentLoaded", updateTimer);
-</script>    </head>
+    </head>
     <body>
         <h2>주문 관리</h2>
         <div class="layout">
