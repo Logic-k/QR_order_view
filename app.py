@@ -34,9 +34,6 @@ def order():
         }
         db.collection("orders").add(order_data)
 
-    	# 🔹 활성 주문에 추가 (관리용)
-    	order_ref = db.collection("orders").add(order_data)
-
     	# 🔹 로그에도 같은 주문 저장 (기록용)
     	db.collection("order_logs").add(order_data)
 
