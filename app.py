@@ -181,6 +181,7 @@ def admin():
         log_data = log.to_dict()
         log_data["id"] = log.id  # 🔹 로그 ID 추가
         order_logs.append(log_data)
+
     return render_template_string('''
     <html>
     <head>
@@ -359,7 +360,7 @@ def admin():
 
     </body>
     </html>
-    ''', orders=orders)
+    ''', orders=orders,order_logs=order_logs)
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
