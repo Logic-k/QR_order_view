@@ -338,6 +338,48 @@ def admin():
         </div>
         <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
         <h2>주문 로그</h2>
+        <!--🔹 주문 로그 테이블 스타일 추가-->
+        <style>
+        .order - log - table{
+            width: 100 %;
+            border - collapse: collapse;
+            margin - top: 20px;
+            background - color: #f8f9fa; /* 연한 회색 배경 */
+            border - radius: 8px;
+            overflow: hidden;
+            box - shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .order - log - table th, .order - log - table td{
+            padding: 12px;
+            text - align: center;
+            border - bottom: 1px solid #dee2e6;
+            color: black; /* ✅ 글자색 검정으로 설정 */
+        }
+
+        .order - log - table th{
+            background - color: #007bff; /* 헤더 파란색 */
+            color: white; /* 헤더 텍스트 흰색 */
+            font - weight: bold;
+        }
+
+        .order - log - table tr : hover{
+            background - color: #e9ecef; /* 마우스를 올리면 색 변경 */
+        }
+
+        .delete - log - btn{
+            background - color: red;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border - radius: 5px;
+            cursor: pointer;
+        }
+
+        .delete - log - btn:hover{
+            background - color: darkred;
+        }
+        </style>
         <table border="1">
             <tr>
                 <th>주문번호</th>
