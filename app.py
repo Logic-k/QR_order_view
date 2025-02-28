@@ -290,7 +290,7 @@ def admin():
     <script>
             setInterval(() => {
                 location.reload();
-            }, 5000); // 5초마다 새로고침
+            }, 15000); // 15초마다 새로고침
         </script>
     <script>
     let refreshTime = 5; // 새로고침 간격 (초 단위)
