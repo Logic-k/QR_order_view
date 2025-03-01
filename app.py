@@ -32,11 +32,7 @@ def order():
             "drink": data.get("drink"),
             "status": "대기 중"
         }
-        order_ref = db.collection("orders").add(order_data)  # 🔹 주문 추가
-        order_id = order_ref[1].id  # 🔹 주문 ID 가져오기
-
-        db.collection("order_logs").document(order_id).set(order_data)  # 🔹 주문 로그 저장
-
+        db.collection("orders").add(order_data)
         return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
 
     return render_template_string('''
@@ -163,24 +159,14 @@ def order():
 @app.route("/admin")
 def admin():
     orders_raw = db.collection("orders").stream()
-    logs_raw = db.collection("order_logs").stream()
-
     orders = {}
-    order_logs = []
 
-    # 🔹 주문 관리 정보 저장
     for order in orders_raw:
         order_data = order.to_dict()
         seat_number = order_data.get("seat")
         if seat_number not in orders:
             orders[seat_number] = []
         orders[seat_number].append({**order_data, "id": order.id})
-
-    # 🔹 주문 로그 정보 저장
-    for log in logs_raw:
-        log_data = log.to_dict()
-        log_data["id"] = log.id  # 🔹 로그 ID 추가
-        order_logs.append(log_data)
 
     return render_template_string('''
     <html>
@@ -270,27 +256,17 @@ def admin():
                 }).then(res => res.json()).then(() => location.reload());
             }
             function deleteAllOrders() {
-                fetch('/delete-all-orders', {
-                    method: 'POST'
-                }).then(() => location.reload());
-            }
-            function deleteLog(logId) {
-                fetch('/delete-log', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: logId })
-                }).then(res => res.json()).then(() => location.reload());
-            }
-            function deleteAllLogs() {
-                fetch('/delete-all-logs', {
-                    method: 'POST'
-                }).then(() => location.reload());
+                if (confirm('정말 모든 주문을 삭제하시겠습니까?')) {
+                    fetch('/delete-all-orders', {
+                        method: 'POST'
+                    }).then(() => location.reload());
+                }
             }
         </script>
     <script>
             setInterval(() => {
                 location.reload();
-            }, 15000); // 15초마다 새로고침
+            }, 5000); // 5초마다 새로고침
         </script>
     <script>
     let refreshTime = 5; // 새로고침 간격 (초 단위)
@@ -304,8 +280,7 @@ def admin():
         }
     }
     document.addEventListener("DOMContentLoaded", updateTimer);
-</script>    
-</head>
+</script>    </head>
     <body>
         <h2>주문 관리</h2>
         <div class="layout">
@@ -337,72 +312,9 @@ def admin():
             </div>
         </div>
         <button class="delete-all-btn" onclick="deleteAllOrders()">모든 주문 삭제</button>
-        <h2>주문 로그</h2>
-        <!--🔹 주문 로그 테이블 스타일 추가-->
-        <style>
-        .order - log - table{
-            width: 100 %;
-            border - collapse: collapse;
-            margin - top: 20px;
-            background - color: #f8f9fa; /* 연한 회색 배경 */
-            border - radius: 8px;
-            overflow: hidden;
-            box - shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .order - log - table th, .order - log - table td{
-            padding: 12px;
-            text - align: center;
-            border - bottom: 1px solid #dee2e6;
-            color: black; /* ✅ 글자색 검정으로 설정 */
-        }
-
-        .order - log - table th{
-            background - color: #007bff; /* 헤더 파란색 */
-            color: white; /* 헤더 텍스트 흰색 */
-            font - weight: bold;
-        }
-
-        .order - log - table tr : hover{
-            background - color: #e9ecef; /* 마우스를 올리면 색 변경 */
-        }
-
-        .delete - log - btn{
-            background - color: red;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border - radius: 5px;
-            cursor: pointer;
-        }
-
-        .delete - log - btn:hover{
-            background - color: darkred;
-        }
-        </style>
-        <table border="1">
-            <tr>
-                <th>주문번호</th>
-                <th>자리</th>
-                <th>족욕 소금</th>
-                <th>음료</th>
-                <th>삭제</th>
-            </tr>
-            {% for log in order_logs %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ log.seat }}</td>
-                <td>{{ log.salt }}</td>
-                <td>{{ log.drink }}</td>
-                <td><button onclick="deleteLog('{{ log.id }}')">삭제</button></td>
-            </tr>
-            {% endfor %}
-        </table>
-        <button onclick="deleteAllLogs()">모든 주문 로그 삭제</button>
-
     </body>
     </html>
-    ''', orders=orders,order_logs=order_logs)
+    ''', orders=orders)
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
@@ -421,20 +333,5 @@ def delete_all_orders():
         db.collection("orders").document(order.id).delete()
     return jsonify({"message": "모든 주문이 삭제되었습니다."})
 
-# 개별 주문 로그 삭제 API
-@app.route("/delete-log", methods=["POST"])
-def delete_log():
-    log_id = request.json.get("id")
-    if log_id:
-        db.collection("order_logs").document(log_id).delete()
-        return jsonify({"message": "주문 로그가 삭제되었습니다."})
-    return jsonify({"error": "유효한 주문 로그 ID가 없습니다."}), 400
 
-# 모든 주문 로그 삭제 API
-@app.route("/delete-all-logs", methods=["POST"])
-def delete_all_logs():
-    logs = db.collection("order_logs").stream()
-    for log in logs:
-        db.collection("order_logs").document(log.id).delete()
-    return jsonify({"message": "모든 주문 로그가 삭제되었습니다."})
 
