@@ -8,10 +8,15 @@ app = Flask(__name__)
 # SQLite 데이터베이스 설정
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# SQLite 데이터베이스 연결 설정
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  
 
 db = SQLAlchemy(app)
+
+with app.app_context():
+    db.create_all()
+    print("✅ 데이터베이스가 생성되었습니다!")
 
 # 주문 테이블 정의
 class Order(db.Model):
