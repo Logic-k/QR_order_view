@@ -87,6 +87,22 @@ def order():
             button:hover {
                 background-color: #45a049;
             }
+            .logo - container{
+                position: fixed; /* 화면 최상단 고정 */
+                top : 0;
+                left: 50 %;
+                transform: translateX(-50 %); /* 가운데 정렬 */
+                width: 100 %;
+                text - align: center;
+                padding: 10px 0;
+                z - index: 1000; /* 다른 요소보다 위에 위치 */
+            }
+            .logo{
+                width: 120px;  /* 로고 크기 조절 */
+                height: 120px;
+                border - radius: 50 %; /* 원형 유지 */
+                object - fit: cover;
+            }
             table {
                 width: 100%;
                 border-collapse: collapse;
@@ -115,6 +131,9 @@ def order():
         </script>
     </head>
     <body>
+	<div class="logo-container">
+    		<img src="{{ url_for('static', filename='logo.png') }}" class="logo" alt="Logo">
+	</div>
 	<div class="announcement">
     		불편하신 점이 있다면 직원을 불러주세요😊<br/>
     		(If you have any inconvenience, please call a staff member!)<br/>
@@ -245,6 +264,22 @@ def admin():
             }
             .delete-all-btn:hover {
                 background: gray;
+            }    
+            .logo - container{
+                position: fixed; /* 화면 최상단 고정 */
+                top : 0;
+                left: 50 %;
+                transform: translateX(-50 %); /* 가운데 정렬 */
+                width: 100 %;
+                text - align: center;
+                padding: 10px 0;
+                z - index: 1000; /* 다른 요소보다 위에 위치 */
+            }
+            .logo{
+                width: 120px;  /* 로고 크기 조절 */
+                height: 120px;
+                border - radius: 50 %; /* 원형 유지 */
+                object - fit: cover;
             }
         </style>
         <script>
@@ -268,6 +303,9 @@ def admin():
         </script>
     </head>
     <body>
+	<div class="logo-container">
+    		<img src="{{ url_for('static', filename='logo.png') }}" class="logo" alt="Logo">
+	</div>
         <h2>주문 관리</h2>
         <div class="layout">
             <div class="column">
