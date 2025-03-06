@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import time
 from flask import Flask, request, jsonify, render_template_string
 
 # Flask 애플리케이션 생성
