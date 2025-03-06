@@ -1,34 +1,12 @@
 import os
 import sqlite3
-from flask_cors import CORS
-from datetime import datetime
 from flask import Flask, request, jsonify, render_template_string
 
 # Flask 애플리케이션 생성
 app = Flask(__name__)
-CORS(app)
-
-# ✅ 영업시간 설정 (09:00 ~ 19:30)
-OPEN_HOUR = 9
-CLOSE_HOUR = 23
-CLOSE_MINUTE = 55
-
-def is_store_open():
-    """현재 시간이 영업시간(09:00 ~ 19:30)인지 확인"""
-    now = datetime.now()
-    is_open = (OPEN_HOUR <= now.hour < CLOSE_HOUR) or (now.hour == CLOSE_HOUR and now.minute < CLOSE_MINUTE)
-    
-    print(f"📢 [DEBUG] 현재 시간: {now}, 영업 상태: {is_open}")  # 디버깅 로그 추가
-    return is_open
-
-@app.route("/check-store-status")
-def check_store_status():
-    """영업시간 여부 반환 (관리자 페이지에서 확인)"""
-    return jsonify({"is_open": is_store_open()})
 
 # 데이터베이스 파일 경로
 DB_FILE = "app.db"
-
 
 # 테이블 생성 (앱 실행 시 한 번 실행됨)
 def create_tables():
@@ -318,48 +296,11 @@ def admin():
                 }).then(() => location.reload());
             }
         </script>
-        <script>
-        function checkStoreStatus() {
-            console.log("📢 /check-store-status API 호출 중...");
-
-            fetch("/check-store-status")
-                .then(response = > {
-                console.log("✅ 서버 응답 수신");
-                return response.json();
-            })
-                .then(data = > {
-                console.log("📢 API 응답 데이터:", data);
-                let statusElement = document.getElementById("store-status");
-                let timerElement = document.getElementById("refresh-timer");
-
-                if (data.is_open) {
-                    console.log("✅ 영업시간입니다! 30초마다 새로고침.");
-                    statusElement.innerText = "✅ 현재 영업 중";
-                    refreshTime = 30;
-                    startAutoRefresh();
-                }
-                else {
-                    console.log("🛑 영업시간이 종료되었습니다. 새로고침 중지.");
-                    statusElement.innerText = "🛑 영업 종료됨 (자동 슬립 모드)";
-                    stopAutoRefresh();
-                }
-            })
-                .catch (error = > {
-                console.error("❌ 서버 응답 오류:", error);
-                document.getElementById("store-status").innerText = "서버 응답 오류 ❌";
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", () = > {
-            checkStoreStatus();  // 페이지 로드 시 영업시간 확인
-            setInterval(checkStoreStatus, 60000);  // 1분마다 상태 갱신
-        });
+    <script>
+            setInterval(() => {
+                location.reload();
+            }, 30000); // 30초마다 새로고침
         </script>
-
-
-        <!--영업 상태 및 새로고침 타이머 표시-->
-        <p id = "store-status">영업 상태 확인 중...</p>
-        <p id = "refresh-timer"></p>
     </head>
     <body>
 	<div class="logo-container">
