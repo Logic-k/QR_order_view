@@ -296,7 +296,7 @@ def admin():
                 }).then(() => location.reload());
             }
         <script>
-        document.addEventListener("DOMContentLoaded", () = > {
+        window.onload = function() {
             let refreshTime = 30;  // 새로고침까지 남은 시간 (초)
             let timerElement = document.getElementById("refresh-timer");
 
@@ -305,22 +305,17 @@ def admin():
                 return;
             }
 
-            // ✅ 타이머 UI 업데이트 함수
-            function updateTimer() {
+            // ✅ 1초마다 타이머 숫자 업데이트
+            let countdown = setInterval(() = > {
                 timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
                     refreshTime--;
 
                 if (refreshTime < 0) {
-                    location.reload();  // 30초마다 새로고침
+                    clearInterval(countdown);  // 타이머 중지
+                    location.reload();  // ✅ 30초마다 새로고침 실행
                 }
-                else {
-                    setTimeout(updateTimer, 1000);  // 1초 후 다시 실행
-                }
-            }
-
-            // ✅ 타이머 시작
-            updateTimer();
-        });
+            }, 1000);  // 1초마다 실행
+        };
         </script>
 
         <!--✅ 새로고침 타이머 표시-->
