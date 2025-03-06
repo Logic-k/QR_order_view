@@ -8,10 +8,12 @@ app = Flask(__name__)
 # 데이터베이스 파일 경로
 DB_FILE = "app.db"
 
-# 테이블 생성 (앱 실행 시 한 번 실행됨)
-def create_tables():
+# 🔹 데이터베이스 초기화 함수 (모든 테이블 한 번에 생성)
+def initialize_database():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+
+    # ✅ 주문 데이터 저장 테이블 (orders)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,28 +23,52 @@ def create_tables():
             status TEXT NOT NULL DEFAULT '대기 중'
         )
     """)
+
+    # ✅ 최근 주문 페이지 접속 기록 테이블 (last_activity)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS last_activity (
+            id INTEGER PRIMARY KEY,
+            last_order_time INTEGER
+        )
+    """)
+
+    # 🛠️ 기본값 추가 (처음에는 비어있을 수 있음)
+    cursor.execute("SELECT COUNT(*) FROM last_activity")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("INSERT INTO last_activity (id, last_order_time) VALUES (1, ?)", (int(time.time()),))
+
     conn.commit()
     conn.close()
 
-# 테이블 생성 실행
-create_tables()
+# ✅ 앱 실행 시 테이블 초기화
+initialize_database()
 
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
 def order():
-    seat_number = request.args.get("seat", "1")
+    seat_number = request.args.get("seat", "1")  # QR코드에서 자리 번호 받기
 
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    current_time = int(time.time())  # 현재 시간 (초 단위)
+
+    # 🔹 최근 주문 페이지 접속 시간 업데이트 (last_activity 테이블)
+    cursor.execute("UPDATE last_activity SET last_order_time = ? WHERE id = 1", (current_time,))
+    
     if request.method == "POST":
         data = request.json
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
+        # 🔹 주문 정보 저장 (orders 테이블)
         cursor.execute("""
-            INSERT INTO orders (seat, salt, drink) 
+            INSERT INTO orders (seat, salt, drink)
             VALUES (?, ?, ?)
         """, (seat_number, data.get("saltType"), data.get("drink")))
         conn.commit()
+
         conn.close()
-        return jsonify({"message": "주문이 완료되었습니다!"})
+        return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
+
+    conn.commit()
+    conn.close()
 
     return render_template_string('''
     <html>
@@ -171,6 +197,27 @@ def order():
     </html>
     ''', seat_number=seat_number)
 
+# 최근 접속 시간 확인 API (관리자 페이지에서 새로고침 여부 결정)
+@app.route("/check-activity")
+def check_activity():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT last_order_time FROM last_activity WHERE id = 1")
+    last_order_time = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    current_time = int(time.time())
+    time_difference = current_time - last_order_time  # 마지막 접속 이후 경과 시간 (초)
+
+    if time_difference < 900:  # 900초 = 15분
+        return jsonify({"refresh": True})  # 새로고침 유지
+    else:
+        return jsonify({"refresh": False})  # 새로고침 중지
+
+
+
 # 관리자 페이지 (자리 형상화 UI)
 @app.route("/admin")
 def admin():
@@ -296,10 +343,23 @@ def admin():
                 }).then(() => location.reload());
             }
         </script>
-    <script>
-            setInterval(() => {
-                location.reload();
-            }, 30000); // 30초마다 새로고침
+        <script>
+        function checkRefreshStatus() {
+            fetch("/check-activity")
+                .then(response = > response.json())
+                .then(data = > {
+                if (data.refresh) {
+                    console.log("✅ 새로고침 활성화 (30초마다)");
+                    setTimeout(() = > location.reload(), 30000);
+                }
+                else {
+                    console.log("🛑 새로고침 중지 (15분 동안 접속 없음)");
+                }
+            })
+                .catch (error = > console.error("❌ 서버 오류:", error));
+        }
+
+        checkRefreshStatus();  // 페이지 로드 시 상태 확인
         </script>
     </head>
     <body>
