@@ -42,7 +42,7 @@ def order():
         """, (seat_number, data.get("saltType"), data.get("drink")))
         conn.commit()
         conn.close()
-        return jsonify({"message": "주문이 완료되었습니다!"})
+        return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
 
     return render_template_string('''
     <html>
@@ -297,19 +297,25 @@ def admin():
             }
         </script>
         <script>
-        let refreshTime = 30;  // 새로고침까지 남은 시간 (초 단위)
+        let refreshTime = 30;  // 새로고침까지 남은 시간 (초)
 
         function startTimer() {
             let timerElement = document.getElementById("refresh-timer");
 
-            setInterval(() = > {
+            // ✅ 페이지 로드 시 타이머 초기화
+            timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
+
+                let countdown = setInterval(() = > {
                 refreshTime--;
+
+                // ✅ 숫자가 변경되도록 HTML 업데이트
                 timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
 
                     if (refreshTime <= 0) {
+                        clearInterval(countdown);  // 타이머 정지
                         location.reload();  // 30초마다 새로고침
                     }
-            }, 1000);  // 1초마다 타이머 업데이트
+            }, 1000);  // 1초마다 업데이트
         }
 
         document.addEventListener("DOMContentLoaded", () = > {
@@ -317,7 +323,7 @@ def admin():
         });
         </script>
 
-        <!--새로고침 타이머 표시-->
+        <!--✅ 새로고침 타이머 표시-->
         <p id = "refresh-timer">새로고침까지: 30초</p>
     </head>
     <body>
