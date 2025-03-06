@@ -296,11 +296,29 @@ def admin():
                 }).then(() => location.reload());
             }
         </script>
-    <script>
-            setInterval(() => {
-                location.reload();
-            }, 30000); // 30초마다 새로고침
+        <script>
+        let refreshTime = 30;  // 새로고침까지 남은 시간 (초 단위)
+
+        function startTimer() {
+            let timerElement = document.getElementById("refresh-timer");
+
+            setInterval(() = > {
+                refreshTime--;
+                timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
+
+                    if (refreshTime <= 0) {
+                        location.reload();  // 30초마다 새로고침
+                    }
+            }, 1000);  // 1초마다 타이머 업데이트
+        }
+
+        document.addEventListener("DOMContentLoaded", () = > {
+            startTimer();  // 페이지 로드 시 타이머 시작
+        });
         </script>
+
+        <!--새로고침 타이머 표시-->
+        <p id = "refresh-timer">새로고침까지: 30초</p>
     </head>
     <body>
 	<div class="logo-container">
