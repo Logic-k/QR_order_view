@@ -348,31 +348,39 @@ def admin():
         </script>
         <script>
         let refreshTime = 30;  // 새로고침까지 남은 시간 (초 단위)
+        let countdown;  // 타이머 ID 저장용 변수
 
         function checkRefreshStatus() {
             fetch("/check-activity")
                 .then(response = > response.json())
                 .then(data = > {
+                let statusElement = document.getElementById("refresh-status");
+                let timerElement = document.getElementById("refresh-timer");
+
                 if (data.refresh) {
                     console.log("✅ 새로고침 활성화 (30초마다)");
-                    document.getElementById("refresh-status").innerText = "새로고침 활성화됨 ✅";
-                    startTimer();  // 타이머 시작
+                    statusElement.innerText = "새로고침 활성화됨 ✅";
+                    refreshTime = 30;  // 타이머 초기화
+                    startTimer();
                 }
                 else {
                     console.log("🛑 새로고침 중지 (15분 동안 접속 없음)");
-                    document.getElementById("refresh-status").innerText = "새로고침 중지됨 🛑";
-                    stopTimer();  // 타이머 중지
+                    statusElement.innerText = "새로고침 중지됨 🛑";
+                    stopTimer();
                 }
             })
                 .catch (error = > console.error("❌ 서버 오류:", error));
         }
 
         function startTimer() {
-            document.getElementById("refresh-timer").innerText = `새로고침까지: ${ refreshTime }초`;
+            let timerElement = document.getElementById("refresh-timer");
 
-                let countdown = setInterval(() = > {
+            // 기존 타이머가 있다면 초기화
+            if (countdown) clearInterval(countdown);
+
+            countdown = setInterval(() = > {
                 refreshTime--;
-                document.getElementById("refresh-timer").innerText = `새로고침까지: ${ refreshTime }초`;
+                timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
 
                     if (refreshTime <= 0) {
                         clearInterval(countdown);  // 타이머 중지
@@ -382,14 +390,19 @@ def admin():
         }
 
         function stopTimer() {
-            document.getElementById("refresh-timer").innerText = "새로고침이 중지되었습니다.";
+            let timerElement = document.getElementById("refresh-timer");
+            if (countdown) clearInterval(countdown);  // 기존 타이머 중지
+            timerElement.innerText = "새로고침이 중지되었습니다.";
         }
 
-        checkRefreshStatus();  // 페이지 로드 시 상태 확인
+        document.addEventListener("DOMContentLoaded", () = > {
+            checkRefreshStatus();  // 페이지 로드 후 상태 확인
+        });
         </script>
-	<!--새로고침 상태 및 타이머 표시-->
-	<p id = "refresh-status"></p>
-	<p id = "refresh-timer"></p>
+
+        <!--새로고침 상태 및 타이머 표시-->
+        <p id = "refresh-status">새로고침 상태 확인 중...</p>
+        <p id = "refresh-timer"></p>
     </head>
     <body>
 	<div class="logo-container">
