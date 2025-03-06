@@ -347,19 +347,42 @@ def admin():
             }
         </script>
         <script>
+        let refreshTime = 30;  // 새로고침까지 남은 시간 (초 단위)
+
         function checkRefreshStatus() {
             fetch("/check-activity")
                 .then(response = > response.json())
                 .then(data = > {
                 if (data.refresh) {
                     console.log("✅ 새로고침 활성화 (30초마다)");
-                    setTimeout(() = > location.reload(), 30000);
+                    document.getElementById("refresh-status").innerText = "새로고침 활성화됨 ✅";
+                    startTimer();  // 타이머 시작
                 }
                 else {
                     console.log("🛑 새로고침 중지 (15분 동안 접속 없음)");
+                    document.getElementById("refresh-status").innerText = "새로고침 중지됨 🛑";
+                    stopTimer();  // 타이머 중지
                 }
             })
                 .catch (error = > console.error("❌ 서버 오류:", error));
+        }
+
+        function startTimer() {
+            document.getElementById("refresh-timer").innerText = `새로고침까지: ${ refreshTime }초`;
+
+                let countdown = setInterval(() = > {
+                refreshTime--;
+                document.getElementById("refresh-timer").innerText = `새로고침까지: ${ refreshTime }초`;
+
+                    if (refreshTime <= 0) {
+                        clearInterval(countdown);  // 타이머 중지
+                        location.reload();  // 새로고침 실행
+                    }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            document.getElementById("refresh-timer").innerText = "새로고침이 중지되었습니다.";
         }
 
         checkRefreshStatus();  // 페이지 로드 시 상태 확인
