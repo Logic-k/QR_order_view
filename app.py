@@ -296,26 +296,33 @@ def admin():
                 }).then(() => location.reload());
             }
         <script>
-        window.onload = function() {
-            let refreshTime = 30;  // 새로고침까지 남은 시간 (초)
-            let timerElement = document.getElementById("refresh-timer");
+        let refreshTime = 30;  // 새로고침까지 남은 시간 (초)
 
+        // ✅ 1초마다 타이머 숫자 업데이트
+        function updateTimer() {
+            let timerElement = document.getElementById("refresh-timer");
             if (!timerElement) {
                 console.error("❌ [ERROR] 'refresh-timer' 요소를 찾을 수 없습니다!");
                 return;
             }
 
-            // ✅ 1초마다 타이머 숫자 업데이트
-            let countdown = setInterval(() = > {
-                timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
-                    refreshTime--;
+            timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
+                refreshTime--;
 
-                if (refreshTime < 0) {
-                    clearInterval(countdown);  // 타이머 중지
-                    location.reload();  // ✅ 30초마다 새로고침 실행
-                }
-            }, 1000);  // 1초마다 실행
-        };
+            if (refreshTime >= 0) {
+                setTimeout(updateTimer, 1000);  // 1초마다 실행
+            }
+        }
+
+        // ✅ 30초마다 자동 새로고침
+        setInterval(() = > {
+            location.reload();
+        }, 30000);
+
+        // ✅ 페이지 로드 시 타이머 시작
+        document.addEventListener("DOMContentLoaded", () = > {
+            updateTimer();
+        });
         </script>
 
         <!--✅ 새로고침 타이머 표시-->
