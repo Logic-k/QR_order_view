@@ -295,31 +295,31 @@ def admin():
                     method: 'POST'
                 }).then(() => location.reload());
             }
-        </script>
         <script>
-        let refreshTime = 30;  // 새로고침까지 남은 시간 (초)
-
-        function startTimer() {
+        document.addEventListener("DOMContentLoaded", () = > {
+            let refreshTime = 30;  // 새로고침까지 남은 시간 (초)
             let timerElement = document.getElementById("refresh-timer");
 
-            // ✅ 페이지 로드 시 타이머 초기화
-            timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
+            if (!timerElement) {
+                console.error("❌ [ERROR] 'refresh-timer' 요소를 찾을 수 없습니다!");
+                return;
+            }
 
-                let countdown = setInterval(() = > {
-                refreshTime--;
-
-                // ✅ 숫자가 변경되도록 HTML 업데이트
+            // ✅ 타이머 UI 업데이트 함수
+            function updateTimer() {
                 timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
+                    refreshTime--;
 
-                    if (refreshTime <= 0) {
-                        clearInterval(countdown);  // 타이머 정지
-                        location.reload();  // 30초마다 새로고침
-                    }
-            }, 1000);  // 1초마다 업데이트
-        }
+                if (refreshTime < 0) {
+                    location.reload();  // 30초마다 새로고침
+                }
+                else {
+                    setTimeout(updateTimer, 1000);  // 1초 후 다시 실행
+                }
+            }
 
-        document.addEventListener("DOMContentLoaded", () = > {
-            startTimer();  // 페이지 로드 시 타이머 시작
+            // ✅ 타이머 시작
+            updateTimer();
         });
         </script>
 
