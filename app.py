@@ -301,6 +301,25 @@ def admin():
                 location.reload();
             }, 30000); // 30초마다 새로고침
         </script>
+        <!--✅ 수동 새로고침 버튼-->
+        < button id = "refresh-button" style = "
+        font - size: 24px;
+        padding: 15px 30px;
+        margin: 20px;
+        background - color: #4CAF50;
+        color: white;
+        border: none;
+        border - radius: 10px;
+        cursor: pointer;">
+        🔄 새로고침
+        </button>
+
+        <script>
+        // ✅ 버튼 클릭 시 새로고침 기능 추가
+        document.getElementById("refresh-button").addEventListener("click", function() {
+            location.reload();
+        });
+        </script>
     </head>
     <body>
 	<div class="logo-container">
