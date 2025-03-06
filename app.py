@@ -1,11 +1,12 @@
 import os
 import sqlite3
+from flask_cors import CORS
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template_string
 
 # Flask 애플리케이션 생성
 app = Flask(__name__)
-
+CORS(app)
 
 # ✅ 영업시간 설정 (09:00 ~ 19:30)
 OPEN_HOUR = 9
@@ -315,19 +316,23 @@ def admin():
             }
         </script>
         <script>
-        let refreshTime = 30;  // 새로고침 주기 (30초)
-        let countdown;  // 타이머 ID 저장
-
         function checkStoreStatus() {
+            console.log("📢 /check-store-status API 호출 중...");
+
             fetch("/check-store-status")
-                .then(response = > response.json())
+                .then(response = > {
+                console.log("✅ 서버 응답 수신");
+                return response.json();
+            })
                 .then(data = > {
+                console.log("📢 API 응답 데이터:", data);
                 let statusElement = document.getElementById("store-status");
                 let timerElement = document.getElementById("refresh-timer");
 
                 if (data.is_open) {
                     console.log("✅ 영업시간입니다! 30초마다 새로고침.");
                     statusElement.innerText = "✅ 현재 영업 중";
+                    refreshTime = 30;
                     startAutoRefresh();
                 }
                 else {
@@ -342,34 +347,12 @@ def admin():
             });
         }
 
-        function startAutoRefresh() {
-            let timerElement = document.getElementById("refresh-timer");
-
-            // 기존 타이머 초기화
-            if (countdown) clearInterval(countdown);
-
-            countdown = setInterval(() = > {
-                refreshTime--;
-                timerElement.innerText = `새로고침까지: ${ refreshTime }초`;
-
-                    if (refreshTime <= 0) {
-                        clearInterval(countdown);  // 타이머 중지
-                        location.reload();  // 새로고침 실행
-                    }
-            }, 1000);
-        }
-
-        function stopAutoRefresh() {
-            let timerElement = document.getElementById("refresh-timer");
-            if (countdown) clearInterval(countdown);  // 기존 타이머 중지
-            timerElement.innerText = "새로고침 중지됨 (영업 종료)";
-        }
-
         document.addEventListener("DOMContentLoaded", () = > {
             checkStoreStatus();  // 페이지 로드 시 영업시간 확인
             setInterval(checkStoreStatus, 60000);  // 1분마다 상태 갱신
         });
         </script>
+
 
         <!--영업 상태 및 새로고침 타이머 표시-->
         <p id = "store-status">영업 상태 확인 중...</p>
