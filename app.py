@@ -1,22 +1,35 @@
 import os
 import sqlite3
-import time
+from datetime import datetime
 from flask import Flask, request, jsonify, render_template_string
-
-#다시 정정
 
 # Flask 애플리케이션 생성
 app = Flask(__name__)
 
+
+# ✅ 영업시간 설정 (09:00 ~ 19:30)
+OPEN_HOUR = 9
+CLOSE_HOUR = 23
+CLOSE_MINUTE = 55
+
+def is_store_open():
+    """현재 시간이 영업시간(09:00 ~ 19:30)인지 확인"""
+    now = datetime.now()
+    return (OPEN_HOUR <= now.hour < CLOSE_HOUR) or (now.hour == CLOSE_HOUR and now.minute < CLOSE_MINUTE)
+
+@app.route("/check-store-status")
+def check_store_status():
+    """영업시간 여부 반환 (관리자 페이지에서 확인)"""
+    return jsonify({"is_open": is_store_open()})
+
 # 데이터베이스 파일 경로
 DB_FILE = "app.db"
 
-# 🔹 데이터베이스 초기화 함수 (모든 테이블 한 번에 생성)
-def initialize_database():
+
+# 테이블 생성 (앱 실행 시 한 번 실행됨)
+def create_tables():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-
-    # ✅ 주문 데이터 저장 테이블 (orders)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,52 +39,28 @@ def initialize_database():
             status TEXT NOT NULL DEFAULT '대기 중'
         )
     """)
-
-    # ✅ 최근 주문 페이지 접속 기록 테이블 (last_activity)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS last_activity (
-            id INTEGER PRIMARY KEY,
-            last_order_time INTEGER
-        )
-    """)
-
-    # 🛠️ 기본값 추가 (처음에는 비어있을 수 있음)
-    cursor.execute("SELECT COUNT(*) FROM last_activity")
-    if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO last_activity (id, last_order_time) VALUES (1, ?)", (int(time.time()),))
-
     conn.commit()
     conn.close()
 
-# ✅ 앱 실행 시 테이블 초기화
-initialize_database()
+# 테이블 생성 실행
+create_tables()
 
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
 def order():
-    seat_number = request.args.get("seat", "1")  # QR코드에서 자리 번호 받기
+    seat_number = request.args.get("seat", "1")
 
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    current_time = int(time.time())  # 현재 시간 (초 단위)
-
-    # 🔹 최근 주문 페이지 접속 시간 업데이트 (last_activity 테이블)
-    cursor.execute("UPDATE last_activity SET last_order_time = ? WHERE id = 1", (current_time,))
-    
     if request.method == "POST":
         data = request.json
-        # 🔹 주문 정보 저장 (orders 테이블)
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO orders (seat, salt, drink)
+            INSERT INTO orders (seat, salt, drink) 
             VALUES (?, ?, ?)
         """, (seat_number, data.get("saltType"), data.get("drink")))
         conn.commit()
-
         conn.close()
-        return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
-
-    conn.commit()
-    conn.close()
+        return jsonify({"message": "주문이 완료되었습니다!"})
 
     return render_template_string('''
     <html>
@@ -200,27 +189,6 @@ def order():
     </html>
     ''', seat_number=seat_number)
 
-# 최근 접속 시간 확인 API (관리자 페이지에서 새로고침 여부 결정)
-@app.route("/check-activity")
-def check_activity():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT last_order_time FROM last_activity WHERE id = 1")
-    last_order_time = cursor.fetchone()[0]
-    
-    conn.close()
-    
-    current_time = int(time.time())
-    time_difference = current_time - last_order_time  # 마지막 접속 이후 경과 시간 (초)
-
-    if time_difference < 900:  # 900초 = 15분
-        return jsonify({"refresh": True})  # 새로고침 유지
-    else:
-        return jsonify({"refresh": False})  # 새로고침 중지
-
-
-
 # 관리자 페이지 (자리 형상화 UI)
 @app.route("/admin")
 def admin():
@@ -347,35 +315,37 @@ def admin():
             }
         </script>
         <script>
-        let refreshTime = 30;  // 새로고침까지 남은 시간 (초 단위)
-        let countdown;  // 타이머 ID 저장용 변수
+        let refreshTime = 30;  // 새로고침 주기 (30초)
+        let countdown;  // 타이머 ID 저장
 
-        function checkRefreshStatus() {
-            fetch("/check-activity")
+        function checkStoreStatus() {
+            fetch("/check-store-status")
                 .then(response = > response.json())
                 .then(data = > {
-                let statusElement = document.getElementById("refresh-status");
+                let statusElement = document.getElementById("store-status");
                 let timerElement = document.getElementById("refresh-timer");
 
-                if (data.refresh) {
-                    console.log("✅ 새로고침 활성화 (30초마다)");
-                    statusElement.innerText = "새로고침 활성화됨 ✅";
-                    refreshTime = 30;  // 타이머 초기화
-                    startTimer();
+                if (data.is_open) {
+                    console.log("✅ 영업시간입니다! 30초마다 새로고침.");
+                    statusElement.innerText = "✅ 현재 영업 중";
+                    startAutoRefresh();
                 }
                 else {
-                    console.log("🛑 새로고침 중지 (15분 동안 접속 없음)");
-                    statusElement.innerText = "새로고침 중지됨 🛑";
-                    stopTimer();
+                    console.log("🛑 영업시간이 종료되었습니다. 새로고침 중지.");
+                    statusElement.innerText = "🛑 영업 종료됨 (자동 슬립 모드)";
+                    stopAutoRefresh();
                 }
             })
-                .catch (error = > console.error("❌ 서버 오류:", error));
+                .catch (error = > {
+                console.error("❌ 서버 응답 오류:", error);
+                document.getElementById("store-status").innerText = "서버 응답 오류 ❌";
+            });
         }
 
-        function startTimer() {
+        function startAutoRefresh() {
             let timerElement = document.getElementById("refresh-timer");
 
-            // 기존 타이머가 있다면 초기화
+            // 기존 타이머 초기화
             if (countdown) clearInterval(countdown);
 
             countdown = setInterval(() = > {
@@ -389,19 +359,20 @@ def admin():
             }, 1000);
         }
 
-        function stopTimer() {
+        function stopAutoRefresh() {
             let timerElement = document.getElementById("refresh-timer");
             if (countdown) clearInterval(countdown);  // 기존 타이머 중지
-            timerElement.innerText = "새로고침이 중지되었습니다.";
+            timerElement.innerText = "새로고침 중지됨 (영업 종료)";
         }
 
         document.addEventListener("DOMContentLoaded", () = > {
-            checkRefreshStatus();  // 페이지 로드 후 상태 확인
+            checkStoreStatus();  // 페이지 로드 시 영업시간 확인
+            setInterval(checkStoreStatus, 60000);  // 1분마다 상태 갱신
         });
         </script>
 
-        <!--새로고침 상태 및 타이머 표시-->
-        <p id = "refresh-status">새로고침 상태 확인 중...</p>
+        <!--영업 상태 및 새로고침 타이머 표시-->
+        <p id = "store-status">영업 상태 확인 중...</p>
         <p id = "refresh-timer"></p>
     </head>
     <body>
