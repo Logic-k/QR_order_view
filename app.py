@@ -3,6 +3,8 @@ import sqlite3
 import time
 from flask import Flask, request, jsonify, render_template_string
 
+#다시 정정
+
 # Flask 애플리케이션 생성
 app = Flask(__name__)
 
