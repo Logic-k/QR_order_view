@@ -16,7 +16,10 @@ CLOSE_MINUTE = 55
 def is_store_open():
     """현재 시간이 영업시간(09:00 ~ 19:30)인지 확인"""
     now = datetime.now()
-    return (OPEN_HOUR <= now.hour < CLOSE_HOUR) or (now.hour == CLOSE_HOUR and now.minute < CLOSE_MINUTE)
+    is_open = (OPEN_HOUR <= now.hour < CLOSE_HOUR) or (now.hour == CLOSE_HOUR and now.minute < CLOSE_MINUTE)
+    
+    print(f"📢 [DEBUG] 현재 시간: {now}, 영업 상태: {is_open}")  # 디버깅 로그 추가
+    return is_open
 
 @app.route("/check-store-status")
 def check_store_status():
