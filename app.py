@@ -387,6 +387,9 @@ def admin():
 
         checkRefreshStatus();  // 페이지 로드 시 상태 확인
         </script>
+	<!--새로고침 상태 및 타이머 표시-->
+	<p id = "refresh-status"></p>
+	<p id = "refresh-timer"></p>
     </head>
     <body>
 	<div class="logo-container">
