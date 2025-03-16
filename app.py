@@ -129,17 +129,6 @@ def order():
                 }).then(res => res.json()).then(data => alert(data.message));
             }
         </script>
-        <!-- 다음 애드핏 광고 삽입 -->
-        <div class="ad-container" style="margin-top: 20px; text-align: center;">
-            <p>📢 스페셜 프로모션</p>
-            <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
-            <ins class="kakao_ad_area" style="display:none;"
-                 data-ad-unit="DAN-EPhGO0Z8yLn39K8b"
-                 data-ad-width="320"
-                 data-ad-height="50"></ins>
-            <script>
-                kakaoAdfit.push({});
-            </script>
     </head>
     <body>
 	<div class="logo-container">
@@ -178,6 +167,16 @@ def order():
             <button onclick="placeOrder()">주문하기 (Order Now)</button>
         </div>
 	<div class="announcement">즐거운 시간 보내세요! (Enjoy your time!) (祝您玩得开心!)</div>
+        <!-- 다음 애드핏 광고 삽입 -->
+        <div class="ad-container" style="margin-top: 20px; text-align: center;">
+            <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
+            <ins class="kakao_ad_area" style="display:none;"
+                 data-ad-unit="DAN-EPhGO0Z8yLn39K8b"
+                 data-ad-width="320"
+                 data-ad-height="50"></ins>
+            <script>
+                kakaoAdfit.push({});
+            </script>
     </body>
     </html>
     ''', seat_number=seat_number)
