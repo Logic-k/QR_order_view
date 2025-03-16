@@ -181,24 +181,90 @@ def order_complete():
     return render_template_string('''
     <html>
     <head>
-        <title>주문 완료</title>
+        <title>주문 완료 | Order Complete | 订单完成</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: 'Noto Sans', sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                text-align: center;
+                background-color: #FAF3E0;
+            }
+            .container {
+                background: white;
+                padding: 20px;
+                border-radius: 12px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                max-width: 350px;
+                width: 90%;
+            }
+            .highlight {
+                font-size: 20px;
+                font-weight: bold;
+                color: #4CAF50;
+            }
+            .announcement {
+                margin-top: 15px;
+                font-size: 14px;
+                color: #666;
+                line-height: 1.6;
+            }
+            /* ✅ 광고 배너 스타일 */
+            .ad-container {
+                margin-top: 20px;
+                text-align: center;
+                width: 100%;
+            }
+            .footer-ad {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                background: white;
+                text-align: center;
+                padding: 10px;
+                box-shadow: 0px -2px 10px rgba(0,0,0,0.1);
+            }
+        </style>
     </head>
     <body>
-        <h2>🎉 주문 완료!</h2>
-        <p>자리 {{ seat_number }}번의 주문이 정상적으로 접수되었습니다.</p>
-        <p>주문이 준비되면 알려드릴게요! </p>
+        <div class="container">
+            <h2>🎉 주문 완료 | Order Complete | 订单完成</h2>
+            <p>자리 <span class="highlight">{{ seat_number }}</span>번의 주문이 정상적으로 접수되었습니다.</p>
+            <p>Order for seat <span class="highlight">{{ seat_number }}</span> has been successfully received.</p>
+            <p>座位 <span class="highlight">{{ seat_number }}</span> 的订单已成功提交。</p>
 
-        <!-- 다음 애드핏 광고 삽입 -->
-        <div class="ad-container" style="margin-top: 20px; text-align: center;">
-            <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
+            <p>주문이 준비되면 직원이 알려드립니다! 😊</p>
+            <p>Our staff will notify you when your order is ready. 😊</p>
+            <p>您的订单准备好后，工作人员会通知您。 😊</p>
+
+            <div class="announcement">
+                추가로 궁금한 사항이 있으면 직원을 불러주세요.<br/>
+                If you have any inquiries, please call a staff member.<br/>
+                如果您有任何疑问，请呼叫工作人员。
+            </div>
+            <p style="font-size: 14px; color: #666;"> "📢 광고 클릭은 개발자에게 큰 힘이 됩니다! | Clicking ads greatly supports the developer! | 点击广告对开发者大有帮助！"</p>
+
+            <!-- ✅ 중앙 배너 광고 -->
+            <div class="ad-container">
+                <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
             <ins class="kakao_ad_area" style="display:none;"
                  data-ad-unit="DAN-EPhGO0Z8yLn39K8b"
                  data-ad-width="320"
                  data-ad-height="50"></ins>
             <script>
                 kakaoAdfit.push({});
-            </script>        
-         </div>
+            </script>
+            </div>
+        </div>
+
+        <!-- ✅ 하단 고정 광고 -->
+        
     </body>
     </html>
     ''', seat_number=seat_number)
