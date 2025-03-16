@@ -42,7 +42,7 @@ def order():
         """, (seat_number, data.get("saltType"), data.get("drink")))
         conn.commit()
         conn.close()
-        return jsonify({"message": "주문이 완료되었습니다! (Order completed!) (订单已完成!)"})
+        return redirect(url_for("order_complete", seat=seat_number))  # 주문 완료 후 리디렉트
 
     return render_template_string('''
     <html>
@@ -126,7 +126,9 @@ def order():
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ saltType: salt, drink: drink })
-                }).then(res => res.json()).then(data => alert(data.message));
+                }).then(() => {
+                    window.location.href = "/order-complete?seat=" + {{ seat_number }};
+                });
             }
         </script>
     </head>
@@ -167,6 +169,25 @@ def order():
             <button onclick="placeOrder()">주문하기 (Order Now)</button>
         </div>
 	<div class="announcement">즐거운 시간 보내세요! (Enjoy your time!) (祝您玩得开心!)</div>
+    </body>
+    </html>
+    ''', seat_number=seat_number)
+
+# ✅ 주문 완료 페이지 (애드핏 광고 배치)
+@app.route("/order-complete")
+def order_complete():
+    seat_number = request.args.get("seat", "1")
+
+    return render_template_string('''
+    <html>
+    <head>
+        <title>주문 완료</title>
+    </head>
+    <body>
+        <h2>🎉 주문 완료!</h2>
+        <p>자리 {{ seat_number }}번의 주문이 정상적으로 접수되었습니다.</p>
+        <p>주문이 준비되면 알려드릴게요! </p>
+
         <!-- 다음 애드핏 광고 삽입 -->
         <div class="ad-container" style="margin-top: 20px; text-align: center;">
             <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
@@ -176,7 +197,8 @@ def order():
                  data-ad-height="50"></ins>
             <script>
                 kakaoAdfit.push({});
-            </script>
+            </script>        
+         </div>
     </body>
     </html>
     ''', seat_number=seat_number)
