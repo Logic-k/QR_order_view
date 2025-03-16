@@ -129,6 +129,9 @@ def order():
                 }).then(res => res.json()).then(data => alert(data.message));
             }
         </script>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5596395713587606"
+     crossorigin="anonymous">
+        </script>
     </head>
     <body>
 	<div class="logo-container">
@@ -319,6 +322,10 @@ def admin():
             document.getElementById("refresh-button").addEventListener("click", function() {
             location.reload();
             });
+    </script>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5596395713587606"
+     crossorigin="anonymous">
     </script>
     </head>
     <body>
