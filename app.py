@@ -252,7 +252,7 @@ def order_complete():
 
             <!-- ✅ 중앙 배너 광고 -->
             <div class="ad-container">
-                <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
+            <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
             <ins class="kakao_ad_area" style="display:none;"
                  data-ad-unit="DAN-VATA9iwWSpD0aM22"
                  data-ad-width="320"
