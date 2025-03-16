@@ -129,9 +129,17 @@ def order():
                 }).then(res => res.json()).then(data => alert(data.message));
             }
         </script>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5596395713587606"
-     crossorigin="anonymous">
-        </script>
+        <!-- 다음 애드핏 광고 삽입 -->
+        <div class="ad-container" style="margin-top: 20px; text-align: center;">
+            <p>📢 스페셜 프로모션</p>
+            <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
+            <ins class="kakao_ad_area" style="display:none;"
+                 data-ad-unit="DAN-EPhGO0Z8yLn39K8b"
+                 data-ad-width="320"
+                 data-ad-height="50"></ins>
+            <script>
+                kakaoAdfit.push({});
+            </script>
     </head>
     <body>
 	<div class="logo-container">
@@ -324,9 +332,6 @@ def admin():
             });
     </script>
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5596395713587606"
-     crossorigin="anonymous">
-    </script>
     </head>
     <body>
 	<div class="logo-container">
