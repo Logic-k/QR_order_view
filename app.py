@@ -222,14 +222,10 @@ def order_complete():
                 text-align: center;
                 width: 100%;
             }
-            .footer-ad {
-                position: fixed;
-                bottom: 0;
+            .scroll-ad {
                 width: 100%;
-                background: white;
                 text-align: center;
-                padding: 10px;
-                box-shadow: 0px -2px 10px rgba(0,0,0,0.1);
+                margin-top: 30px;
             }
         </style>
     </head>
@@ -264,13 +260,12 @@ def order_complete():
             </div>
         </div>
 
-        <!-- ✅ 하단 고정 광고 (320x100) -->
-        <div class="footer-ad">
-            <p style="font-size: 14px; color: #666;">📢 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
-	     <script src = "https://ads-partners.coupang.com/g.js">< / script>
-	     <script>
-	      new PartnersCoupang.G({ "id":848440,"template" : "carousel","trackingCode" : "AF6385937","width" : "320","height" : "50","tsource" : "" });
-	     </script>
+            <!-- ✅ 스크롤 가능한 배너 광고 -->
+            <div class="scroll-ad">
+                <script src="https://ads-partners.coupang.com/g.js"></script>
+                <script>
+                    new PartnersCoupang.G({"id":848440,"template":"carousel","trackingCode":"AF6385937","width":"320","height":"100","tsource":""});
+                </script>
     </body>
     </html>
     ''', seat_number=seat_number)
