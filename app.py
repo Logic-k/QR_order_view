@@ -496,6 +496,11 @@ def delete_all_orders():
     conn.close()
     return jsonify({"message": "모든 주문이 삭제되었습니다."})
 
+#크롤러 허용 설정
+@app.route("/robots.txt")
+def robots():
+	return "User-agent: *\nDisallow:", 200, {"Content-Type" : "text/plain"}
+
 # Flask 서버 실행
 if __name__ == "__main__":
     app.run(debug=True)
