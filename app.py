@@ -399,26 +399,41 @@ def admin():
                 location.reload();
             }, 30000); // 30초마다 새로고침
      </script>
-<!-- ✅ 수동 새로고침 버튼 -->
-    <button id="refresh-button" style="
-            font-size: 24px;  
-            padding: 15px 30px;  
-            margin: 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;">
-            🔄 새로고침
+<!--✅ 새로고침 버튼(우측 상단 고정) -->
+    <button id = "refresh-button" style = "
+        position: fixed;
+        top: 10px;   /* 화면 상단 고정 */
+        right: 10px; /* 화면 우측 고정 */
+        font - size: 18px;
+        padding: 12px 20px;
+        background - color: #4CAF50;
+        color: white;
+        border: none;
+        border - radius: 8px;
+        cursor: pointer;
+        box - shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s ease - in - out;
+        z - index: 1000;  /* 다른 요소 위에 표시 */
+        ">
+        🔄 새로고침
     </button>
 
     <script>
-    // ✅ 버튼 클릭 시 새로고침 기능 추가
-            document.getElementById("refresh-button").addEventListener("click", function() {
+        // ✅ 버튼 클릭 시 새로고침 기능
+        document.getElementById("refresh-button").addEventListener("click", function() {
             location.reload();
-            });
+        });
     </script>
-
+    <style>
+        @media(max - width: 600px) {  /* 📱 모바일 화면 (600px 이하) */
+            #refresh - button{
+                font - size: 16px;
+                padding: 10px 18px;
+                top: 8px;
+                right: 8px;
+            }
+        }
+    </style>
     </head>
     <body>
 	<div class="logo-container">
