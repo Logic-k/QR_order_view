@@ -335,7 +335,7 @@ def admin():
         <h2>주문 관리</h2>
         <div class="layout">
             <div class="column">
-                {% for seat_number in range(9, 13) %}
+                {% for seat_number in range(12, 8, -1) %}
                     <div class="seat {% if orders.get(seat_number|string) %}occupied{% endif %}">
                         {{ seat_number }}번
                         {% for order in orders.get(seat_number|string, []) %}
@@ -366,8 +366,12 @@ def admin():
 
         <div id="master-order-form" style="display: none; margin-top: 20px; background: white; padding: 15px; color: black; border-radius: 10px;">
             <h3>마스터 주문 입력</h3>
-            <label>자리 번호:</label>
-            <input type="number" id="master-seat" min="1" style="padding:5px;"><br/>
+        <label>자리 번호:</label>
+        <select id="master-seat" style="padding:5px;">
+          {% for num in range(1, 13) %}
+            <option value="{{ num }}">{{ num }}번</option>
+          {% endfor %}
+        </select><br/>
             <label>소금 선택:</label>
             <select id="master-salt" style="padding:5px;">
                 <option value="라벤더">라벤더</option>
@@ -395,7 +399,7 @@ def admin():
         </div>
     </body>
     </html>
-    ''', orders=orders)
+    ''', orders=orders, range=range)
 
 # 개별 주문 삭제 API
 @app.route("/delete-order", methods=["POST"])
