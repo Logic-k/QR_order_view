@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from flask import Flask, request, jsonify, render_template_string, redirect, url_for
+from datetime import datetime, timedelta
 
 # Flask 애플리케이션 생성
 app = Flask(__name__)
@@ -12,6 +13,7 @@ DB_FILE = "app.db"
 def create_tables():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+    # 주문 테이블
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,11 +23,139 @@ def create_tables():
             status TEXT NOT NULL DEFAULT '대기 중'
         )
     """)
+    # 예약 테이블
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reservations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            start_time TEXT NOT NULL,
+            duration INTEGER NOT NULL,
+            people_count INTEGER NOT NULL,
+            payment_method TEXT NOT NULL,
+            memo TEXT,
+            assigned_seats TEXT
+        )
+    """)
     conn.commit()
     conn.close()
 
-# 테이블 생성 실행
 create_tables()
+
+# ---------------------- 시간 슬롯 생성 ----------------------
+def generate_time_slots(start="10:00", end="20:00", interval_minutes=10):
+    slots = []
+    t = datetime.strptime(start, "%H:%M")
+    end_t = datetime.strptime(end, "%H:%M")
+    while t < end_t:
+        slots.append(t.strftime("%H:%M"))
+        t += timedelta(minutes=interval_minutes)
+    return slots
+
+# ---------------------- 예약 등록 API ----------------------
+@app.route("/reserve", methods=["GET", "POST"])
+def reserve():
+    if request.method == "POST":
+        data = request.form
+        name = data.get("name")
+        start_time = data.get("start_time")
+        duration = int(data.get("duration"))
+        people_count = int(data.get("people_count"))
+        payment_method = data.get("payment_method")
+        memo = data.get("memo")
+
+        assigned_seats = find_available_seats(start_time, duration, people_count)
+        if assigned_seats is None:
+            return "<h3>예약 실패: 해당 시간대에 충분한 좌석이 없습니다.</h3>"
+
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO reservations
+            (name, start_time, duration, people_count, payment_method, memo, assigned_seats)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (name, start_time, duration, people_count, payment_method, memo, ','.join(map(str, assigned_seats))))
+        conn.commit()
+        conn.close()
+        return f"<h3>예약 완료: {', '.join(map(str, assigned_seats))}번 좌석</h3>"
+
+    # 시각화용 예약 데이터 조회
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, assigned_seats, start_time, duration FROM reservations")
+    reservations = cursor.fetchall()
+    conn.close()
+
+    slots = generate_time_slots()
+    seats = [str(i) for i in range(1, 13)]
+
+    # 시간별 좌석 예약 정보 구성
+    timetable = {slot: {seat: "" for seat in seats} for slot in slots}
+    for name, assigned, start, dur in reservations:
+        st = datetime.strptime(start, "%H:%M")
+        for i in range(int(dur) // 10):
+            t = (st + timedelta(minutes=10 * i)).strftime("%H:%M")
+            for s in assigned.split(','):
+                timetable[t][s] = name
+
+    # 테이블 시각화 HTML 생성
+    table_html = "<table border='1' style='border-collapse:collapse;'><tr><th>시간</th>" + ''.join(f"<th>{s}번</th>" for s in seats) + "</tr>"
+    for time in slots:
+        table_html += f"<tr><td>{time}</td>" + ''.join(f"<td>{timetable[time][s]}</td>" for s in seats) + "</tr>"
+    table_html += "</table>"
+
+    return render_template_string('''
+    <h2>예약 등록</h2>
+    <form method="POST">
+        예약자명: <input name="name" required><br/>
+        시작 시간: <input type="time" name="start_time" required><br/>
+        이용 시간(분): <input type="number" name="duration" value="30" min="10" step="10" required><br/>
+        인원 수: <input type="number" name="people_count" value="1" min="1" max="12" required><br/>
+        결제 방식:
+        <select name="payment_method">
+            <option value="계좌이체">계좌이체</option>
+            <option value="현금">현금</option>
+            <option value="카드">카드</option>
+        </select><br/>
+        특이사항: <textarea name="memo"></textarea><br/>
+        <button type="submit">예약 등록</button>
+    </form>
+    <h2>예약 현황</h2>
+    ''' + table_html)
+
+# ---------------------- 좌석 배정 로직 ----------------------
+def find_available_seats(start_time_str, duration_min, people_count):
+    time_format = "%H:%M"
+    start_time = datetime.strptime(start_time_str, time_format)
+    required_slots = [(start_time + timedelta(minutes=10*i)).strftime(time_format)
+                      for i in range(duration_min // 10)]
+
+    seat_status = {str(seat): set() for seat in range(1, 13)}  # 1~12번 좌석
+
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT assigned_seats, start_time, duration FROM reservations")
+    for row in cursor.fetchall():
+        seats, s_time, dur = row
+        if not seats:
+            continue
+        s_time = datetime.strptime(s_time, time_format)
+        occupied_slots = [(s_time + timedelta(minutes=10*i)).strftime(time_format)
+                           for i in range(int(dur) // 10)]
+        for seat in seats.split(','):
+            seat_status[seat].update(occupied_slots)
+
+    conn.close()
+
+    available = []
+    for seat, used_slots in seat_status.items():
+        if all(slot not in used_slots for slot in required_slots):
+            available.append(seat)
+            if len(available) == people_count:
+                return available
+
+    return None  # 충분한 좌석이 없음
+
+
 
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
