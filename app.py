@@ -49,10 +49,10 @@ def reserve():
 <html>
 <head>
   <meta charset='utf-8'/>
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet'/>
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline@6.1.8/index.global.min.css" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline@6.1.8/index.global.min.js"></script>
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.css' rel='stylesheet'/>
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.js'></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline/index.global.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline/index.global.min.js"></script>
   <style>
     html, body { font-family: Arial, sans-serif; margin: 20px; padding: 0; }
     #calendar { max-width: 1200px; margin: 40px auto; }
@@ -64,6 +64,7 @@ def reserve():
     document.addEventListener('DOMContentLoaded', function() {
       const calendarEl = document.getElementById('calendar');
       const calendar = new FullCalendar.Calendar(calendarEl, {
+        plugins: [FullCalendar.resourceTimelinePlugin],
         schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
         initialView: 'resourceTimelineDay',
         nowIndicator: true,
