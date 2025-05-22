@@ -66,7 +66,7 @@ def reserve():
     if request.method == "POST":
         data = request.form
         name = data.get("name")
-        start_time = data.get("start_time")
+        start_time = datetime.strptime(data.get("start_time"), "%H:%M").strftime("%H:%M")
         duration = 30  # 고정 30분
         people_count = int(data.get("people_count"))
         payment_method = data.get("payment_method")
@@ -91,7 +91,7 @@ def reserve():
     conn.close()
 
     seats = [str(i) for i in range(1, 13)]
-    timeline_html = "<div style='overflow-x: auto; white-space: nowrap;'>"
+    timeline_html = "<div style='overflow-x: auto; width: 100%;'><div style='width: 34560px; position: relative;'>"
     timeline_html += """
 <style>
 .slot { display: inline-block; width: 24px; text-align: center; font-size: 10px; }
@@ -112,7 +112,7 @@ def reserve():
     now = datetime.now()
     left_px = int(now.hour * 60 + now.minute) * 24  # 1분 = 24px 기준 복원
     timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; left: {left_px}px; width: 2px; background: red;'></div>"
-    timeline_html += "</div>"
+    timeline_html += "</div></div>"
 
     # 좌석별 예약 시각화
     for seat in seats:
@@ -153,6 +153,7 @@ def reserve():
     '''
 
     return render_template_string(form_html + timeline_html)
+
 
 
 
