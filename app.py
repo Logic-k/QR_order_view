@@ -40,143 +40,129 @@ def create_tables():
 create_tables()
 
 
-# ---------------------- 예약 삭제 API ----------------------
-@app.route("/delete-reservation/<int:reservation_id>", methods=["POST"])
-def delete_reservation(reservation_id):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM reservations WHERE id=?", (reservation_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for("reserve"))
 
 # ---------------------- 예약 등록 및 시각화 ----------------------
-@app.route("/reserve", methods=["GET", "POST"])
+@app.route("/reserve")
 def reserve():
-    if request.method == "POST":
-        data = request.form
-        name = data.get("name")
-        start_time = datetime.strptime(data.get("start_time"), "%H:%M").strftime("%H:%M")
-        duration = 30
-        people_count = int(data.get("people_count"))
-        payment_method = data.get("payment_method")
-        memo = data.get("memo")
-        assigned_seats = data.getlist("assigned_seats")
-
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO reservations
-            (name, start_time, duration, people_count, payment_method, memo, assigned_seats)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (name, start_time, duration, people_count, payment_method, memo, ','.join(assigned_seats)))
-        conn.commit()
-        conn.close()
-        return redirect(url_for("reserve"))
-
-    # 예약 데이터 불러오기 및 task 생성
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, name, assigned_seats, start_time, duration, memo FROM reservations")
-    reservations = cursor.fetchall()
-    conn.close()
-
-    tasks = []
-    for rid, name, assigned_seats, start_time, duration, memo in reservations:
-        start_dt = datetime.strptime(start_time, "%H:%M")
-        end_dt = start_dt + timedelta(minutes=duration)
-        for seat in assigned_seats.split(','):
-            tasks.append({
-                "id": f"{rid}_{seat.strip()}",
-                "name": f"좌석 {seat.strip()}",
-                "label": name,
-                "start": f"2025-05-23T{start_dt.strftime('%H:%M')}",
-                "end": f"2025-05-23T{end_dt.strftime('%H:%M')}",
-                "memo": memo
-            })
-
-    # 좌석번호 기준으로 정렬하여 같은 좌석은 같은 줄
-    tasks.sort(key=lambda x: int(x["name"].replace("좌석 ", "")))
-
-    seats = [str(i) for i in range(1, 13)]
-
     return render_template_string("""
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>예약 관리</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .bar-green { fill: #90caf9; }
-        #gantt { overflow-x: auto; }
-    </style>
+  <meta charset='utf-8' />
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <style>
+    html, body { font-family: Arial, sans-serif; margin: 20px; padding: 0; }
+    #calendar { max-width: 1200px; margin: 40px auto; }
+  </style>
 </head>
 <body>
-    <h2>예약 등록</h2>
-    <form method="POST">
-        예약자명: <input name="name" required><br/>
-        시작 시간: <input type="time" name="start_time" required><br/>
-        인원 수: <input type="number" name="people_count" value="1" min="1" max="12" required><br/>
-        결제 방식:
-        <select name="payment_method">
-            <option value="계좌이체">계좌이체</option>
-            <option value="현금">현금</option>
-            <option value="카드">카드</option>
-        </select><br/>
-        좌석 선택:<br/>
-        {% for seat in seats %}
-            <label><input type="checkbox" name="assigned_seats" value="{{ seat }}">{{ seat }}번</label>
-        {% endfor %}<br/>
-        특이사항: <textarea name="memo"></textarea><br/>
-        <button type="submit">예약 등록</button>
-    </form>
-
-    <h2>간트차트 시간표</h2>
-    <div id="gantt"></div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js"></script>
-    <script>
-        const tasks = [
-            {% for task in tasks %}
-            {
-                id: "{{ task.id }}",
-                name: "{{ task.name }}",
-                start: "{{ task.start }}",
-                end: "{{ task.end }}",
-                progress: 100,
-                label: "{{ task.label }}",
-                custom_class: "bar-green"
-            },
-            {% endfor %}
-        ];
-
-        const gantt = new Gantt("#gantt", tasks, {
-            view_mode: 'Hour',
-            step: 30,
-            column_width: 100,
-            custom_popup_html: function(task) {
-                return `
-                    <div class="details-container">
-                        <strong>${task.label}</strong><br/>
-                        <span>${task.start.slice(-5)} ~ ${task.end.slice(-5)}</span><br/>
-                        <button onclick="editReservation('${task.id}')">수정</button>
-                        <form method='POST' action='/delete-reservation/${task.id.split('_')[0]}' style='display:inline;'>
-                            <button type='submit'>삭제</button>
-                        </form>
-                    </div>
-                `;
-            }
-        });
-
-        function editReservation(id) {
-            alert("아직 수정 기능은 구현되지 않았습니다: " + id);
+  <div id='calendar'></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+        initialView: 'resourceTimelineDay',
+        nowIndicator: true,
+        editable: true,
+        selectable: true,
+        height: 'auto',
+        slotMinTime: '10:00:00',
+        slotMaxTime: '20:00:00',
+        slotDuration: '00:10:00',
+        resourceAreaHeaderContent: '좌석',
+        resources: [
+          {% for i in range(1, 13) %}
+          { id: '{{ i }}', title: '{{ i }}번' },
+          {% endfor %}
+        ],
+        events: '/api/events',
+        select: function(info) {
+          const name = prompt('예약자 이름:');
+          if (name) {
+            fetch('/api/events', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: name,
+                start: info.startStr,
+                end: info.endStr,
+                resourceId: info.resource.id
+              })
+            }).then(() => calendar.refetchEvents());
+          }
+          calendar.unselect();
+        },
+        eventClick: function(info) {
+          if (confirm(`예약자: ${info.event.title}\n삭제하시겠습니까?`)) {
+            fetch(`/api/events/${info.event.id}`, { method: 'DELETE' })
+              .then(() => calendar.refetchEvents());
+          }
+        },
+        eventDrop: function(info) {
+          fetch(`/api/events/${info.event.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              start: info.event.start.toISOString(),
+              end: info.event.end.toISOString(),
+              resourceId: info.event.getResources()[0].id
+            })
+          });
+        },
+        eventResize: function(info) {
+          fetch(`/api/events/${info.event.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              start: info.event.start.toISOString(),
+              end: info.event.end.toISOString(),
+              resourceId: info.event.getResources()[0].id
+            })
+          });
         }
-    </script>
+      });
+      calendar.render();
+    });
+  </script>
 </body>
 </html>
-""", tasks=tasks, seats=seats)
+""", seats=range(1, 13))
+
+@app.route("/api/events", methods=["GET", "POST"])
+def api_events():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    if request.method == "POST":
+        data = request.get_json()
+        cursor.execute("INSERT INTO reservations (name, start_time, end_time, resource_id) VALUES (?, ?, ?, ?)",
+                       (data['name'], data['start'], data['end'], data['resourceId']))
+        conn.commit()
+        return '', 201
+    else:
+        cursor.execute("SELECT id, name, start_time, end_time, resource_id FROM reservations")
+        rows = cursor.fetchall()
+        return jsonify([{
+            'id': row[0], 'title': row[1], 'start': row[2], 'end': row[3], 'resourceId': row[4]
+        } for row in rows])
+
+@app.route("/api/events/<int:event_id>", methods=["PUT", "DELETE"])
+def update_event(event_id):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    if request.method == "DELETE":
+        cursor.execute("DELETE FROM reservations WHERE id=?", (event_id,))
+        conn.commit()
+        return '', 204
+    else:
+        data = request.get_json()
+        cursor.execute("""
+            UPDATE reservations SET start_time=?, end_time=?, resource_id=? WHERE id=?
+        """, (data['start'], data['end'], data['resourceId'], event_id))
+        conn.commit()
+        return '', 204
+
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
 def order():
