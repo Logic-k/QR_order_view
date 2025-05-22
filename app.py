@@ -57,7 +57,7 @@ def reserve():
         data = request.form
         name = data.get("name")
         start_time = datetime.strptime(data.get("start_time"), "%H:%M").strftime("%H:%M")
-        duration = 30  # 고정 30분
+        duration = 30
         people_count = int(data.get("people_count"))
         payment_method = data.get("payment_method")
         memo = data.get("memo")
@@ -74,29 +74,32 @@ def reserve():
         conn.close()
         return redirect(url_for("reserve"))
 
+    # 예약 정보 불러오기 및 Frappe Gantt용 변환
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, assigned_seats, start_time, duration, memo FROM reservations")
-    raw_reservations = cursor.fetchall()
+    reservations = cursor.fetchall()
     conn.close()
 
     tasks = []
-    for rid, name, assigned, start, dur, memo in raw_reservations:
+    for rid, name, seats, start, dur, memo in reservations:
         start_dt = datetime.strptime(start, "%H:%M")
         end_dt = start_dt + timedelta(minutes=dur)
-        for seat in assigned.split(','):
+        for seat in seats.split(','):
             tasks.append({
                 "id": f"{rid}_{seat}",
-                "name": f"{seat}번",
+                "name": f"좌석 {seat}",  # 동일 좌석을 같은 줄로 표시
+                "label": f"{name}",     # 툴팁에 예약자 표시
                 "start": f"2025-05-23T{start_dt.strftime('%H:%M')}",
                 "end": f"2025-05-23T{end_dt.strftime('%H:%M')}",
                 "memo": memo
             })
 
-    tasks.sort(key=lambda x: int(x["name"].replace("번", "")))
+    # 좌석 번호순으로 정렬하여 같은 좌석은 같은 줄에 표시
+    tasks.sort(key=lambda x: int(x["name"].replace("좌석 ", "")))
 
+    # 예약 폼 + 간트차트 렌더링
     seats = [str(i) for i in range(1, 13)]
-    
     form_html = '''
     <h2>예약 등록</h2>
     <form method="POST">
@@ -117,14 +120,10 @@ def reserve():
     <h2>간트차트 시간표</h2>
     '''
 
-    return render_template_string(
-        form_html + """
+    return render_template_string(form_html + """
 <div id='gantt'></div>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js'>function editReservation(taskId) {
-  alert(`예약 수정 기능은 아직 구현되지 않았습니다. 예약 ID: ${taskId}`);
-}
-</script>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.css' />
+<script src='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js'></script>
 <script>
   const tasks = [
     {% for task in tasks %}
@@ -134,10 +133,12 @@ def reserve():
       start: '{{ task.start }}',
       end: '{{ task.end }}',
       progress: 100,
-      custom_class: 'bar-green'
+      custom_class: 'bar-green',
+      label: '{{ task.label }}'
     },
     {% endfor %}
   ];
+
   const gantt = new Gantt("#gantt", tasks, {
     view_mode: 'Hour',
     column_width: 60,
@@ -148,7 +149,7 @@ def reserve():
     custom_popup_html: function(task) {
       return `
         <div class="details-container">
-          <strong>예약자: ${task.name}</strong><br/>
+          <strong>예약자: ${task.label}</strong><br/>
           <span>시작: ${task.start.slice(-5)}</span><br/>
           <span>종료: ${task.end.slice(-5)}</span><br/>
           <button onclick="editReservation('${task.id}')">수정</button>
@@ -159,10 +160,12 @@ def reserve():
       `;
     }
   });
+
+  function editReservation(taskId) {
+    alert(`예약 수정 기능은 아직 구현되지 않았습니다. 예약 ID: ${taskId}`);
+  }
 </script>
-""",
-        tasks=tasks
-    )
+""", tasks=tasks)
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
 def order():
