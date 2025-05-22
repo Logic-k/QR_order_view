@@ -41,7 +41,7 @@ create_tables()
 
 
 # ---------------------- 시간 슬롯 생성 ----------------------
-def generate_minute_slots(start="10:00", end="20:00"):
+def generate_minute_slots(start="00:00", end="24:00"):
     slots = []
     t = datetime.strptime(start, "%H:%M")
     end_t = datetime.strptime(end, "%H:%M")
@@ -110,7 +110,7 @@ def reserve():
             timeline_html += f"<span class='slot'>|</span>"
 
     now = datetime.now()
-    left_px = int((now.hour - 10) * 60 + now.minute) * 24  # 1분 = 24px 기준 복원
+    left_px = int(now.hour * 60 + now.minute) * 24  # 1분 = 24px 기준 복원
     timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; left: {left_px}px; width: 2px; background: red;'></div>"
     timeline_html += "</div>"
 
