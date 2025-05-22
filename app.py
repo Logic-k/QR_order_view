@@ -116,7 +116,8 @@ def reserve():
         for rid, name, assigned, start, dur, memo in reservations:
             if seat in assigned.split(','):
                 start_dt = datetime.strptime(start, "%H:%M")
-                index = (start_dt - datetime.strptime("10:00", "%H:%M")).seconds // 60
+                base_time = datetime.strptime("10:00", "%H:%M")
+                index = int((start_dt - base_time).total_seconds() // 1)
                 width = int(dur)  # 분 단위
                 left_px = index  # 1분당 1.5em -> 24px 기준으로 설정
                 width_px = width
