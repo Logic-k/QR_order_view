@@ -44,127 +44,100 @@ create_tables()
 # ---------------------- 예약 등록 및 시각화 ----------------------
 @app.route("/reserve")
 def reserve():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM reservations")
+    reservations = cursor.fetchall()
+    conn.close()
+
     return render_template_string("""
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset='utf-8'/>
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.css' rel='stylesheet'/>
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.js'></script>
-  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline/index.global.min.css" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline/index.global.min.js"></script>
+  <meta charset="utf-8"/>
+  <title>예약 관리</title>
   <style>
-    html, body { font-family: Arial, sans-serif; margin: 20px; padding: 0; }
-    #calendar { max-width: 1200px; margin: 40px auto; }
+    body { font-family: Arial; margin: 0; padding: 0; background: #f9f9f9; }
+    .timeline-container {
+      overflow-x: scroll;
+      overflow-y: scroll;
+      height: 600px;
+      border: 1px solid #ccc;
+      white-space: nowrap;
+      position: relative;
+    }
+    .timeline-grid {
+      display: flex;
+      position: relative;
+    }
+    .timeline-hour {
+      width: 80px;
+      height: 100%;
+      border-right: 1px solid #eee;
+      writing-mode: vertical-lr;
+      text-align: center;
+      padding-top: 5px;
+      background: #f0f0f0;
+      font-size: 12px;
+    }
+    .seat-row {
+      display: flex;
+      align-items: center;
+      height: 60px;
+      position: relative;
+    }
+    .seat-label {
+      width: 80px;
+      text-align: center;
+      background: #e0e0e0;
+      border-bottom: 1px solid #ccc;
+      font-weight: bold;
+    }
+    .event {
+      position: absolute;
+      height: 50px;
+      background: #4CAF50;
+      color: white;
+      padding: 2px;
+      border-radius: 5px;
+      font-size: 12px;
+      text-align: center;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <div id='calendar'></div>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const calendarEl = document.getElementById('calendar');
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        plugins: [FullCalendar.resourceTimelinePlugin],
-        schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
-        initialView: 'resourceTimelineDay',
-        nowIndicator: true,
-        editable: true,
-        selectable: true,
-        height: 'auto',
-        slotMinTime: '10:00:00',
-        slotMaxTime: '20:00:00',
-        slotDuration: '00:10:00',
-        resourceAreaHeaderContent: '좌석',
-        resources: [
-          {% for i in range(1, 13) %}
-          { id: '{{ i }}', title: '{{ i }}번' },
-          {% endfor %}
-        ],
-        events: '/api/events',
-        select: function(info) {
-          const name = prompt('예약자 이름:');
-          if (name) {
-            fetch('/api/events', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: name,
-                start: info.startStr,
-                end: info.endStr,
-                resourceId: info.resource.id
-              })
-            }).then(() => calendar.refetchEvents());
-          }
-          calendar.unselect();
-        },
-        eventClick: function(info) {
-          if (confirm(`예약자: ${info.event.title}\n삭제하시겠습니까?`)) {
-            fetch(`/api/events/${info.event.id}`, { method: 'DELETE' })
-              .then(() => calendar.refetchEvents());
-          }
-        },
-        eventDrop: function(info) {
-          fetch(`/api/events/${info.event.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              start: info.event.start.toISOString(),
-              end: info.event.end.toISOString(),
-              resourceId: info.event.getResources()[0].id
-            })
-          });
-        },
-        eventResize: function(info) {
-          fetch(`/api/events/${info.event.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              start: info.event.start.toISOString(),
-              end: info.event.end.toISOString(),
-              resourceId: info.event.getResources()[0].id
-            })
-          });
-        }
-      });
-      calendar.render();
-    });
-  </script>
+  <h2 style="text-align:center;">좌석 예약 현황</h2>
+  <div class="timeline-container">
+    <div class="timeline-grid">
+      <div class="timeline-hour-column">
+        {% for hour in range(10, 21) %}
+          <div class="timeline-hour">{{ "%02d:00" % hour }}</div>
+        {% endfor %}
+      </div>
+      <div class="timeline-content">
+        {% for seat in range(1, 13) %}
+          <div class="seat-row">
+            <div class="seat-label">{{ seat }}번</div>
+            {% for res in reservations %}
+              {% if res[7] == seat|string %}
+                {% set start = res[2][:5] %}
+                {% set dur = res[3]|int %}
+                {% set left = (start.split(':')[0]|int - 10) * 80 + (start.split(':')[1]|int / 60 * 80) %}
+                {% set width = dur * 80 %}
+                <div class="event" style="left:{{ left }}px; width:{{ width }}px;" title="{{ res[1] }}">
+                  {{ res[1] }}<br/>({{ start }} ~ {{ dur }}분)
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 </body>
 </html>
-""", seats=range(1, 13))
-
-@app.route("/api/events", methods=["GET", "POST"])
-def api_events():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    if request.method == "POST":
-        data = request.get_json()
-        cursor.execute("INSERT INTO reservations (name, start_time, end_time, resource_id) VALUES (?, ?, ?, ?)",
-                       (data['name'], data['start'], data['end'], data['resourceId']))
-        conn.commit()
-        return '', 201
-    else:
-        cursor.execute("SELECT id, name, start_time, end_time, resource_id FROM reservations")
-        rows = cursor.fetchall()
-        return jsonify([{
-            'id': row[0], 'title': row[1], 'start': row[2], 'end': row[3], 'resourceId': row[4]
-        } for row in rows])
-
-@app.route("/api/events/<int:event_id>", methods=["PUT", "DELETE"])
-def update_event(event_id):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    if request.method == "DELETE":
-        cursor.execute("DELETE FROM reservations WHERE id=?", (event_id,))
-        conn.commit()
-        return '', 204
-    else:
-        data = request.get_json()
-        cursor.execute("""
-            UPDATE reservations SET start_time=?, end_time=?, resource_id=? WHERE id=?
-        """, (data['start'], data['end'], data['resourceId'], event_id))
-        conn.commit()
-        return '', 204
+""", reservations=reservations)
 
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
