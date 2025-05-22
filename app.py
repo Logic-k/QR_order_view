@@ -108,7 +108,9 @@ def reserve():
             timeline_html += f"<span class='slot'>{slot}</span>"
         else:
             timeline_html += f"<span class='slot'>|</span>"
-    timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; {% set now = datetime.now() %}left: {{ (now.hour - 10) * 60 + now.minute }}px; width: 2px; background: red;'></div></div>"
+    now = datetime.now()
+    left_px = int((now.hour - 10) * 60 + now.minute)
+    timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; left: {left_px}px; width: 2px; background: red;'></div></div>"
 
     # 좌석별 예약 시각화
     for seat in seats:
