@@ -20,14 +20,99 @@ def create_tables():
             salt TEXT NOT NULL,
             drink TEXT NOT NULL,
             status TEXT NOT NULL DEFAULT '대기 중'
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reservations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            start_time TEXT NOT NULL,
+            duration INTEGER NOT NULL,
+            seat TEXT NOT NULL
         )
     """)
-    
     conn.commit()
     conn.close()
 
 create_tables()
 
+@app.route("/planner", methods=["GET", "POST"])
+def planner():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+        name = request.form['name']
+        seat = request.form['seat']
+        start = request.form['start']
+        duration = int(request.form['duration'])
+        cursor.execute("INSERT INTO reservations (name, seat, start_time, duration) VALUES (?, ?, ?, ?)",
+                       (name, seat, start, duration))
+        conn.commit()
+        return redirect(url_for("planner"))
+
+    cursor.execute("SELECT id, name, seat, start_time, duration FROM reservations")
+    rows = cursor.fetchall()
+    conn.close()
+
+    reservations = []
+    for rid, name, seat, start, duration in rows:
+        h, m = map(int, start.split(":"))
+        start_minute = h * 60 + m
+        reservations.append({
+            "id": rid,
+            "name": name,
+            "seat": int(seat),
+            "start_minute": start_minute,
+            "duration": duration
+        })
+
+    return render_template_string("""
+<!DOCTYPE html>
+<html lang=\"ko\">
+<head>
+  <meta charset=\"UTF-8\">
+  <title>예약 도우미</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .timetable-container { position: relative; width: 1440px; border-left: 1px solid #ccc; overflow-x: auto; }
+    .hour-labels { display: flex; position: sticky; top: 0; background: #f9f9f9; z-index: 1; }
+    .hour-label { width: 60px; text-align: center; font-size: 12px; border-right: 1px solid #eee; }
+    .seat-row { display: flex; height: 40px; align-items: center; border-bottom: 1px solid #ddd; position: relative; }
+    .seat-label { width: 60px; text-align: center; background: #f0f0f0; font-weight: bold; border-right: 1px solid #ccc; }
+    .grid-line { width: 60px; height: 100%; border-right: 1px solid #eee; box-sizing: border-box; }
+    .reservation { position: absolute; height: 30px; background: #90caf9; color: #000; font-size: 12px; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
+    form { margin-top: 30px; padding: 10px; background: #f1f1f1; }
+  </style>
+</head>
+<body>
+  <h2>좌석 예약 시간표</h2>
+  <div class=\"timetable-container\">
+    <div class=\"hour-labels\">
+      <div class=\"seat-label\"></div>
+      {% for h in range(0, 24) %}<div class=\"hour-label\">{{ '%02d:00' % h }}</div>{% endfor %}
+    </div>
+    {% for seat in range(1, 13) %}
+    <div class=\"seat-row\">
+      <div class=\"seat-label\">{{ seat }}번</div>
+      {% for h in range(0, 24) %}<div class=\"grid-line\"></div>{% endfor %}
+      {% for r in reservations if r['seat'] == seat %}
+      <div class=\"reservation\" style=\"left: {{ r['start_minute'] }}px; width: {{ r['duration'] }}px;\">{{ r['name'] }}</div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <form method=\"POST\">
+    <h3>예약 추가</h3>
+    예약자명: <input name=\"name\" required>
+    좌석: <select name=\"seat\">{% for s in range(1,13) %}<option value=\"{{s}}\">{{s}}번</option>{% endfor %}</select>
+    시작 시간: <input type=\"time\" name=\"start\" required>
+    이용 시간(분): <input type=\"number\" name=\"duration\" value=\"30\" min=\"10\" max=\"180\" required>
+    <button type=\"submit\">저장</button>
+  </form>
+</body>
+</html>
+""", reservations=reservations)
 
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
