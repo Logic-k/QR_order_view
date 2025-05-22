@@ -93,6 +93,8 @@ def reserve():
                 "memo": memo
             })
 
+    tasks.sort(key=lambda x: int(x["name"].replace("번", "")))
+
     seats = [str(i) for i in range(1, 13)]
     
     form_html = '''
@@ -138,6 +140,11 @@ def reserve():
   ];
   const gantt = new Gantt("#gantt", tasks, {
     view_mode: 'Hour',
+    column_width: 60,
+    step: 30,
+    time_formats: {
+      Hour: 'HH:mm'
+    },
     custom_popup_html: function(task) {
       return `
         <div class="details-container">
@@ -156,8 +163,6 @@ def reserve():
 """,
         tasks=tasks
     )
-
-
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
 def order():
