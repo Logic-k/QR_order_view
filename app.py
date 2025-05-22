@@ -41,13 +41,13 @@ create_tables()
 
 
 # ---------------------- 시간 슬롯 생성 ----------------------
-def generate_time_slots(start="10:00", end="20:00", interval_minutes=10):
+def generate_minute_slots(start="10:00", end="20:00"):
     slots = []
     t = datetime.strptime(start, "%H:%M")
     end_t = datetime.strptime(end, "%H:%M")
     while t < end_t:
         slots.append(t.strftime("%H:%M"))
-        t += timedelta(minutes=interval_minutes)
+        t += timedelta(minutes=1)
     return slots
 
 # ---------------------- 예약 삭제 API ----------------------
@@ -90,36 +90,35 @@ def reserve():
     reservations = cursor.fetchall()
     conn.close()
 
-    slots = generate_time_slots()
     seats = [str(i) for i in range(1, 13)]
+    timeline_html = "<div style='overflow-x: auto; white-space: nowrap;'>"
+    timeline_html += "<style> .slot { display: inline-block; width: 1.5em; text-align: center; font-size: 10px; } .bar { position: absolute; height: 24px; border-radius: 4px; background: #4CAF50; color: white; font-size: 12px; padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .row { position: relative; height: 30px; margin-bottom: 10px; border-bottom: 1px solid #ccc; } </style>"
+    minute_slots = generate_minute_slots()
 
-    timetable = {slot: {seat: [] for seat in seats} for slot in slots}
-    for rid, name, assigned, start, dur, memo in reservations:
-        st = datetime.strptime(start, "%H:%M")
-        for i in range(int(dur) // 10):
-            t = (st + timedelta(minutes=10 * i)).strftime("%H:%M")
-            if t not in timetable:
-                continue
-            for s in assigned.split(','):
-                timetable[t][s].append(
-    f"<div style='background:#d9edf7; border:1px solid #bce8f1; padding:3px; margin-bottom:2px; border-radius:4px; font-size:13px;'>"
-    f"<strong>{name}</strong><br/><small>{memo}</small><br/>"
-    f"<form method='POST' action='/delete-reservation/{rid}' style='margin-top:2px;'>"
-    f"<button type='submit' style='font-size:10px; background:#f2dede; border:none; color:#a94442; border-radius:3px;'>삭제</button>"
-    f"</form></div>"
-)
+    # 시간 타임라인 헤더
+    timeline_html += "<div style='margin-left: 60px;'>"
+    for slot in minute_slots:
+        if slot.endswith("0") or slot.endswith("5"):
+            timeline_html += f"<span class='slot'>{slot}</span>"
+        else:
+            timeline_html += f"<span class='slot'>|</span>"
+    timeline_html += "</div>"
 
-    table_html = """
-    <style>
-    table { width: 100%; font-size: 14px; border-collapse: collapse; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; }
-    td > div { margin-bottom: 4px; }
-    </style>
-    <table><tr><th>시간</th>""" + ''.join(f"<th>{s}번</th>" for s in seats) + "</tr>"
-    for time in slots:
-        table_html += f"<tr><td>{time}</td>" + ''.join(f"<td>{''.join(timetable[time][s])}</td>" for s in seats) + "</tr>"
-    table_html += "</table>"
+    # 좌석별 예약 시각화
+    for seat in seats:
+        timeline_html += f"<div class='row'><div style='position: absolute; left: 0; width: 60px;'>{seat}번</div>"
+        for rid, name, assigned, start, dur, memo in reservations:
+            if seat in assigned.split(','):
+                start_dt = datetime.strptime(start, "%H:%M")
+                index = (start_dt - datetime.strptime("10:00", "%H:%M")).seconds // 60
+                width = int(dur)  # 분 단위
+                left_px = index * 24  # 1분당 1.5em -> 24px 기준으로 설정
+                width_px = width * 24
+                timeline_html += f"<div class='bar' style='left: {left_px}px; width: {width_px}px;'>"
+                timeline_html += f"{name} <small>({memo})</small></div>"
+        timeline_html += "</div>"
+
+    timeline_html += "</div>"
 
     form_html = '''
     <h2>예약 등록</h2>
@@ -138,10 +137,10 @@ def reserve():
         특이사항: <textarea name="memo"></textarea><br/>
         <button type="submit">예약 등록</button>
     </form>
-    <h2>예약 현황</h2>
+    <h2>간트차트 시간표</h2>
     '''
 
-    return render_template_string(form_html + table_html)
+    return render_template_string(form_html + timeline_html)
 
 
 # 주문 페이지 (QR 스캔)
