@@ -48,9 +48,11 @@ def reserve():
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset='utf-8' />
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+  <meta charset='utf-8'/>
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet'/>
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline@6.1.8/index.global.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timeline@6.1.8/index.global.min.js"></script>
   <style>
     html, body { font-family: Arial, sans-serif; margin: 20px; padding: 0; }
     #calendar { max-width: 1200px; margin: 40px auto; }
