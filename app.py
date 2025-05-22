@@ -94,7 +94,7 @@ def reserve():
     timeline_html = "<div style='overflow-x: auto; white-space: nowrap;'>"
     timeline_html += """
 <style>
-.slot { display: inline-block; width: 24px; text-align: center; font-size: 10px; }
+.slot { display: inline-block; width: 1px; }
 .bar { position: absolute; height: 24px; border-radius: 4px; background: #4CAF50; color: white; font-size: 12px; padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row { position: relative; height: 30px; margin-bottom: 10px; border-bottom: 1px solid #ccc; }
 </style>
@@ -102,15 +102,18 @@ def reserve():
     minute_slots = generate_minute_slots()
 
     # 시간 타임라인 헤더
-    timeline_html += "<div style='margin-left: 60px; position: relative;'>"
-    for slot in minute_slots:
-        if slot.endswith("0") or slot.endswith("5"):
-            timeline_html += f"<span class='slot'>{slot}</span>"
+    timeline_html += "<div style='margin-left: 60px; position: relative; display: flex; align-items: flex-end;'>"
+    for i, slot in enumerate(minute_slots):
+        if i % 5 == 0:
+            timeline_html += f"<div style='width:1px; height:20px; background:#999; position:relative;'>"
+            timeline_html += f"<div style='position:absolute; top:-14px; left:-12px; font-size:10px;'>{slot}</div></div>"
         else:
-            timeline_html += f"<span class='slot'>|</span>"
+            timeline_html += "<div style='width:1px; height:10px; background:#ccc;'></div>"
+
     now = datetime.now()
     left_px = int((now.hour - 10) * 60 + now.minute)
-    timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; left: {left_px}px; width: 2px; background: red;'></div></div>"
+    timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; left: {left_px}px; width: 2px; background: red;'></div>"
+    timeline_html += "</div>"
 
     # 좌석별 예약 시각화
     for seat in seats:
@@ -122,7 +125,7 @@ def reserve():
                 base_time = datetime.combine(today, datetime.strptime("10:00", "%H:%M").time())
                 index = int((start_dt - base_time).total_seconds() // 1)
                 width = int(dur)  # 분 단위
-                left_px = index  # 1분당 1.5em -> 24px 기준으로 설정
+                left_px = index  # 1분 = 1px 정확히 매핑
                 width_px = width
                 timeline_html += f"<div class='bar' style='left: {left_px}px; width: {width_px}px;'>"
                 timeline_html += f"{name} <small>({memo})</small></div>"
