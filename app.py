@@ -87,7 +87,7 @@ def reserve():
         for seat in assigned.split(','):
             tasks.append({
                 "id": f"{rid}_{seat}",
-                "name": f"{name} ({seat}번)",
+                "name": f"{seat}번",
                 "start": f"2025-05-23T{start_dt.strftime('%H:%M')}",
                 "end": f"2025-05-23T{end_dt.strftime('%H:%M')}",
                 "memo": memo
@@ -141,7 +141,9 @@ def reserve():
     custom_popup_html: function(task) {
       return `
         <div class="details-container">
-          <strong>${task.name}</strong><br/>
+          <strong>예약자: ${task.name}</strong><br/>
+          <span>시작: ${task.start.slice(-5)}</span><br/>
+          <span>종료: ${task.end.slice(-5)}</span><br/>
           <button onclick="editReservation('${task.id}')">수정</button>
           <form method='POST' action='/delete-reservation/${task.id.split('_')[0]}' style='display:inline;'>
             <button type='submit'>삭제</button>
@@ -154,7 +156,6 @@ def reserve():
 """,
         tasks=tasks
     )
-
 
 
 # 주문 페이지 (QR 스캔)
