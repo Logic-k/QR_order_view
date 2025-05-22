@@ -108,15 +108,16 @@ def reserve():
             timeline_html += f"<span class='slot'>{slot}</span>"
         else:
             timeline_html += f"<span class='slot'>|</span>"
-    timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; left: {{ (datetime.now().hour - 10) * 60 + datetime.now().minute }}px; width: 2px; background: red;'></div></div>"
+    timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; {% set now = datetime.now() %}left: {{ (now.hour - 10) * 60 + now.minute }}px; width: 2px; background: red;'></div></div>"
 
     # 좌석별 예약 시각화
     for seat in seats:
         timeline_html += f"<div class='row'><div style='position: absolute; left: 0; width: 60px;'>{seat}번</div>"
         for rid, name, assigned, start, dur, memo in reservations:
             if seat in assigned.split(','):
-                start_dt = datetime.strptime(start, "%H:%M")
-                base_time = datetime.strptime("10:00", "%H:%M")
+                today = datetime.now().date()
+                start_dt = datetime.combine(today, datetime.strptime(start, "%H:%M").time())
+                base_time = datetime.combine(today, datetime.strptime("10:00", "%H:%M").time())
                 index = int((start_dt - base_time).total_seconds() // 1)
                 width = int(dur)  # 분 단위
                 left_px = index  # 1분당 1.5em -> 24px 기준으로 설정
