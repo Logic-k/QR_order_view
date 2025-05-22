@@ -41,10 +41,10 @@ create_tables()
 
 
 # ---------------------- 시간 슬롯 생성 ----------------------
-def generate_minute_slots(start="00:00", end="24:00"):
+def generate_minute_slots(start="00:00", end="23:59"):
     slots = []
     t = datetime.strptime(start, "%H:%M")
-    end_t = datetime.strptime(end, "%H:%M")
+    end_t = datetime.strptime(end, "%H:%M") + timedelta(minutes=1)
     while t < end_t:
         slots.append(t.strftime("%H:%M"))
         t += timedelta(minutes=1)
