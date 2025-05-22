@@ -1,7 +1,6 @@
 import os
 import sqlite3
-from flask import Flask, request, jsonify, render_template_string, redirect, url_for
-from datetime import datetime, timedelta
+from flask import Flask, request, jsonify, render_template_string
 
 # Flask 애플리케이션 생성
 app = Flask(__name__)
@@ -13,7 +12,6 @@ DB_FILE = "app.db"
 def create_tables():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    # 주문 테이블
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,126 +21,11 @@ def create_tables():
             status TEXT NOT NULL DEFAULT '대기 중'
         )
     """)
-    # 예약 테이블
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS reservations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            start_time TEXT NOT NULL,
-            duration INTEGER NOT NULL,
-            people_count INTEGER NOT NULL,
-            payment_method TEXT NOT NULL,
-            memo TEXT,
-            assigned_seats TEXT
-        )
-    """)
     conn.commit()
     conn.close()
 
+# 테이블 생성 실행
 create_tables()
-
-# ---------------------- 시간 슬롯 생성 ----------------------
-def generate_time_slots(start="10:00", end="20:00", interval_minutes=10):
-    slots = []
-    t = datetime.strptime(start, "%H:%M")
-    end_t = datetime.strptime(end, "%H:%M")
-    while t < end_t:
-        slots.append(t.strftime("%H:%M"))
-        t += timedelta(minutes=interval_minutes)
-    return slots
-
-# ---------------------- 예약 삭제 API ----------------------
-@app.route("/delete-reservation/<int:reservation_id>", methods=["POST"])
-def delete_reservation(reservation_id):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM reservations WHERE id=?", (reservation_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for("reserve"))
-
-# ---------------------- 예약 등록 및 시각화 ----------------------
-@app.route("/reserve", methods=["GET", "POST"])
-def reserve():
-    if request.method == "POST":
-        data = request.form
-        name = data.get("name")
-        start_time = data.get("start_time")
-        duration = 30  # 고정 30분
-        people_count = int(data.get("people_count"))
-        payment_method = data.get("payment_method")
-        memo = data.get("memo")
-        assigned_seats = data.getlist("assigned_seats")
-
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO reservations
-            (name, start_time, duration, people_count, payment_method, memo, assigned_seats)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (name, start_time, duration, people_count, payment_method, memo, ','.join(assigned_seats)))
-        conn.commit()
-        conn.close()
-        return redirect(url_for("reserve"))
-
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, name, assigned_seats, start_time, duration, memo FROM reservations")
-    reservations = cursor.fetchall()
-    conn.close()
-
-    slots = generate_time_slots()
-    seats = [str(i) for i in range(1, 13)]
-
-    timetable = {slot: {seat: [] for seat in seats} for slot in slots}
-    for rid, name, assigned, start, dur, memo in reservations:
-        st = datetime.strptime(start, "%H:%M")
-        for i in range(int(dur) // 10):
-            t = (st + timedelta(minutes=10 * i)).strftime("%H:%M")
-            if t not in timetable:
-                continue
-            for s in assigned.split(','):
-                timetable[t][s].append(
-    f"<div style='background:#d9edf7; border:1px solid #bce8f1; padding:3px; margin-bottom:2px; border-radius:4px; font-size:13px;'>"
-    f"<strong>{name}</strong><br/><small>{memo}</small><br/>"
-    f"<form method='POST' action='/delete-reservation/{rid}' style='margin-top:2px;'>"
-    f"<button type='submit' style='font-size:10px; background:#f2dede; border:none; color:#a94442; border-radius:3px;'>삭제</button>"
-    f"</form></div>"
-)
-
-    table_html = """
-    <style>
-    table { width: 100%; font-size: 14px; border-collapse: collapse; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; }
-    td > div { margin-bottom: 4px; }
-    </style>
-    <table><tr><th>시간</th>""" + ''.join(f"<th>{s}번</th>" for s in seats) + "</tr>"
-    for time in slots:
-        table_html += f"<tr><td>{time}</td>" + ''.join(f"<td>{''.join(timetable[time][s])}</td>" for s in seats) + "</tr>"
-    table_html += "</table>"
-
-    form_html = '''
-    <h2>예약 등록</h2>
-    <form method="POST">
-        예약자명: <input name="name" required><br/>
-        시작 시간: <input type="time" name="start_time" required><br/>
-        인원 수: <input type="number" name="people_count" value="1" min="1" max="12" required><br/>
-        결제 방식:
-        <select name="payment_method">
-            <option value="계좌이체">계좌이체</option>
-            <option value="현금">현금</option>
-            <option value="카드">카드</option>
-        </select><br/>
-        좌석 선택:<br/>
-        ''' + ''.join(f'<label><input type="checkbox" name="assigned_seats" value="{s}">{s}번</label> ' for s in seats) + '''<br/>
-        특이사항: <textarea name="memo"></textarea><br/>
-        <button type="submit">예약 등록</button>
-    </form>
-    <h2>예약 현황</h2>
-    '''
-
-    return render_template_string(form_html + table_html)
 
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
@@ -243,7 +126,9 @@ def order():
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ saltType: salt, drink: drink })
-                }).then(res => res.json()).then(data => alert(data.message));
+                }).then(() => {
+                    window.location.href = "/order-complete?seat=" + {{ seat_number }};
+                });
             }
         </script>
     </head>
@@ -287,6 +172,109 @@ def order():
     </body>
     </html>
     ''', seat_number=seat_number)
+
+# ✅ 주문 완료 페이지 (애드핏 광고 배치)
+@app.route("/order-complete")
+def order_complete():
+    seat_number = request.args.get("seat", "1")
+
+    return render_template_string('''
+    <html>
+    <head>
+        <title>주문 완료 | Order Complete | 订单完成</title>
+        <meta name="robots" content="index, follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: 'Noto Sans', sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                text-align: center;
+                background-color: #FAF3E0;
+            }
+            .container {
+                background: white;
+                padding: 20px;
+                border-radius: 12px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                max-width: 350px;
+                width: 90%;
+            }
+            .highlight {
+                font-size: 20px;
+                font-weight: bold;
+                color: #4CAF50;
+            }
+            .announcement {
+                margin-top: 15px;
+                font-size: 14px;
+                color: #666;
+                line-height: 1.6;
+            }
+            /* ✅ 광고 배너 스타일 */
+            .ad-container {
+                margin-top: 20px;
+                text-align: center;
+                width: 100%;
+            }
+            .scroll-ad {
+                width: 100%;
+                text-align: center;
+                margin-top: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>🎉 주문 완료 | Order Complete | 订单完成</h2>
+            <p>자리 <span class="highlight">{{ seat_number }}</span>번의 주문이 정상적으로 접수되었습니다.</p>
+            <p>Order for seat <span class="highlight">{{ seat_number }}</span> has been successfully received.</p>
+            <p>座位 <span class="highlight">{{ seat_number }}</span> 的订单已成功提交。</p>
+
+            <p>주문이 준비되면 직원이 알려드립니다! 😊</p>
+            <p>Our staff will notify you when your order is ready. 😊</p>
+            <p>您的订单准备好后，工作人员会通知您。 😊</p>
+
+            <div class="announcement">
+                추가로 궁금한 사항이 있으면 직원을 불러주세요.<br/>
+                If you have any inquiries, please call a staff member.<br/>
+                如果您有任何疑问，请呼叫工作人员。
+            </div>
+            <p style="font-size: 14px; color: #666;"> "📢 광고 클릭은 개발자에게 큰 힘이 됩니다! | Clicking ads greatly supports the developer! | 点击广告对开发者大有帮助！"</p>
+
+            <!-- ✅ 중앙 배너 광고 -->
+            <div class="ad-container">
+            <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js"></script>
+            <ins class="kakao_ad_area" style="display:none;"
+                 data-ad-unit="DAN-NO3XVRFTivoc3r2E"
+                 data-ad-width="320"
+                 data-ad-height="50"></ins>
+            <script>
+                kakaoAdfit.push({});
+            </script>
+            </div>
+        </div>
+
+            <!-- ✅ 스크롤 가능한 배너 광고 -->
+            <div class="scroll-ad">
+                <script src="https://ads-partners.coupang.com/g.js"></script>
+                <script>
+                    new PartnersCoupang.G({"id":848440,"template":"carousel","trackingCode":"AF6385937","width":"320","height":"100","tsource":""});
+                </script>
+            <!-- ✅ 대가성 문구 추가 (announcement 클래스 활용) -->
+            <div class="announcement">
+                ※ 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.<br/>
+            </div>
+    </body>
+    </html>
+    ''', seat_number=seat_number)
+
+
 
 # 관리자 페이지 (자리 형상화 UI)
 @app.route("/admin")
@@ -560,6 +548,11 @@ def master_order():
         conn.close()
         return jsonify({"message": f"{seat}번 자리에 마스터 주문이 등록되었습니다."})
     return jsonify({"error": "모든 필드를 입력해주세요."}), 400
+
+#크롤러 허용 설정
+@app.route("/robots.txt")
+def robots():
+	return "User-agent: *\nDisallow:", 200, {"Content-Type" : "text/plain"}
 
 # Flask 서버 실행
 if __name__ == "__main__":
