@@ -77,8 +77,21 @@ def reserve():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, assigned_seats, start_time, duration, memo FROM reservations")
-    reservations = cursor.fetchall()
+    raw_reservations = cursor.fetchall()
     conn.close()
+
+    tasks = []
+    for rid, name, assigned, start, dur, memo in raw_reservations:
+        start_dt = datetime.strptime(start, "%H:%M")
+        end_dt = start_dt + timedelta(minutes=dur)
+        for seat in assigned.split(','):
+            tasks.append({
+                "id": f"{rid}_{seat}",
+                "name": f"{name} ({seat}번)",
+                "start": f"2025-05-23T{start_dt.strftime('%H:%M')}",
+                "end": f"2025-05-23T{end_dt.strftime('%H:%M')}",
+                "memo": memo
+            })
 
     seats = [str(i) for i in range(1, 13)]
     
@@ -108,17 +121,15 @@ def reserve():
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.css' />
 <script>
   const tasks = [
-    {% for rid, name, assigned, start, dur, memo in reservations %}
-    {% for seat in assigned.split(',') %}
+    {% for task in tasks %}
     {
-      id: '{{ rid }}_{{ seat }}',
-      name: '{{ name }} ({{ seat }}번)',
-      start: '2025-05-23T{{ start }}',
-      end: '2025-05-23T{{ '%02d:%02d' % ((int(start[:2]) + (int(start[3:]) + dur) // 60, (int(start[3:]) + dur) % 60) }}',
+      id: '{{ task.id }}',
+      name: '{{ task.name }}',
+      start: '{{ task.start }}',
+      end: '{{ task.end }}',
       progress: 100,
       custom_class: 'bar-green'
     },
-    {% endfor %}
     {% endfor %}
   ];
   new Gantt("#gantt", tasks);
