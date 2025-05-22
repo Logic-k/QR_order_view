@@ -58,13 +58,15 @@ def planner():
     reservations = []
     for rid, name, seat, start, duration in rows:
         h, m = map(int, start.split(":"))
-        start_minute = h * 60 + m + m / 60
+        start_minute = h * 60 + m  # 1분 = 1px 기준 유지
+        top = (int(seat) - 1) * 40
         reservations.append({
             "id": rid,
             "name": name,
             "seat": int(seat),
             "start_minute": start_minute,
-            "duration": duration
+            "duration": duration,
+            "top": top
         })
 
     return render_template_string("""
@@ -87,15 +89,26 @@ def planner():
 </head>
 <body>
   <h2>좌석 예약 시간표</h2>
-  <div class=\"timetable-container\">
+  <div class=\"timetable-container\" style=\"position: relative; height: {{ 12 * 40 }}px;\">
     <div class=\"hour-labels\">
       <div class=\"seat-label\"></div>
+      {% for h in range(0, 24) %}
+        {% for m in range(0, 60, 10) %}
+          {% if m == 0 %}
+            <div class=\"hour-label\">{{ '%02d:00' % h }}</div>
+          {% else %}
+            <div class=\"hour-label\" style=\"color: #ccc; font-size: 10px;\">{{ '%02d:%02d' % (h, m) }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
       {% for h in range(0, 24) %}<div class=\"hour-label\">{{ '%02d:00' % h }}</div>{% endfor %}
     </div>
-    {% for seat in range(1, 13) %}
-    <div class=\"seat-row\">
-      <div class=\"seat-label\">{{ seat }}번</div>
-      {% for h in range(0, 24) %}<div class=\"grid-line\"></div>{% endfor %}
+    {% for r in reservations %}
+    <div class=\"reservation\" style=\"top: {{ r['top'] }}px; left: {{ r['start_minute'] }}px; width: {{ r['duration'] }}px;\">
+      {{ r['name'] }}
+    </div>
+  {% endfor %}{% endfor %}
       {% for r in reservations if r['seat'] == seat %}
       <div class=\"reservation\" style=\"left: {{ r['start_minute'] }}px; width: {{ r['duration'] }}px;\">{{ r['name'] }}</div>
       {% endfor %}
