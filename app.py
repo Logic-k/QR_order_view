@@ -40,16 +40,6 @@ def create_tables():
 create_tables()
 
 
-# ---------------------- 시간 슬롯 생성 ----------------------
-def generate_minute_slots(start="00:00", end="23:59"):
-    slots = []
-    t = datetime.strptime(start, "%H:%M")
-    end_t = datetime.strptime(end, "%H:%M") + timedelta(minutes=1)
-    while t < end_t:
-        slots.append(t.strftime("%H:%M"))
-        t += timedelta(minutes=1)
-    return slots
-
 # ---------------------- 예약 삭제 API ----------------------
 @app.route("/delete-reservation/<int:reservation_id>", methods=["POST"])
 def delete_reservation(reservation_id):
@@ -91,47 +81,7 @@ def reserve():
     conn.close()
 
     seats = [str(i) for i in range(1, 13)]
-    timeline_html = "<div style='overflow-x: auto; width: 100%;'><div style='width: 34560px; position: relative;'>"
-    timeline_html += """
-<style>
-.slot { display: inline-block; width: 24px; text-align: center; font-size: 10px; }
-.bar { position: absolute; height: 24px; border-radius: 4px; background: #4CAF50; color: white; font-size: 12px; padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row { position: relative; height: 30px; margin-bottom: 10px; border-bottom: 1px solid #ccc; }
-</style>
-"""
-    minute_slots = generate_minute_slots()
-
-    # 시간 타임라인 헤더
-    timeline_html += "<div style='margin-left: 60px; position: relative;'>"
-    for i, slot in enumerate(minute_slots):
-        if i % 5 == 0:
-            timeline_html += f"<span class='slot'>{slot}</span>"
-        else:
-            timeline_html += f"<span class='slot'>|</span>"
-
-    now = datetime.now()
-    left_px = int(now.hour * 60 + now.minute) * 24  # 1분 = 24px 기준 복원
-    timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; left: {left_px}px; width: 2px; background: red;'></div>"
-    timeline_html += "</div></div>"
-
-    # 좌석별 예약 시각화
-    for seat in seats:
-        timeline_html += f"<div class='row'><div style='position: absolute; left: 0; width: 60px;'>{seat}번</div>"
-        for rid, name, assigned, start, dur, memo in reservations:
-            if seat in assigned.split(','):
-                today = datetime.now().date()
-                start_dt = datetime.combine(today, datetime.strptime(start, "%H:%M").time())
-                base_time = datetime.combine(today, datetime.strptime("00:00", "%H:%M").time())
-                index = int((start_dt - base_time).total_seconds() // 1)
-                width = int(dur)  # 분 단위
-                left_px = index * 24  # 1분 = 24px 기준 복원
-                width_px = width * 24
-                timeline_html += f"<div class='bar' style='left: {left_px}px; width: {width_px}px;'>"
-                timeline_html += f"{name} <small>({memo})</small></div>"
-        timeline_html += "</div>"
-
-    timeline_html += "</div>"
-
+    
     form_html = '''
     <h2>예약 등록</h2>
     <form method="POST">
@@ -152,8 +102,28 @@ def reserve():
     <h2>간트차트 시간표</h2>
     '''
 
-    return render_template_string(form_html + timeline_html)
-
+    return render_template_string(form_html + """
+<div id='gantt'></div>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js'></script>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.css' />
+<script>
+  const tasks = [
+    {% for rid, name, assigned, start, dur, memo in reservations %}
+    {% for seat in assigned.split(',') %}
+    {
+      id: '{{ rid }}_{{ seat }}',
+      name: '{{ name }} ({{ seat }}번)',
+      start: '2025-05-23T{{ start }}',
+      end: '2025-05-23T{{ '%02d:%02d' % ((int(start[:2]) + (int(start[3:]) + dur) // 60, (int(start[3:]) + dur) % 60) }}',
+      progress: 100,
+      custom_class: 'bar-green'
+    },
+    {% endfor %}
+    {% endfor %}
+  ];
+  new Gantt("#gantt", tasks);
+</script>
+""")
 
 
 
