@@ -55,85 +55,97 @@ def reserve():
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>예약 관리</title>
+  <title>예약 간트차트</title>
   <style>
-    body { font-family: Arial; margin: 0; padding: 0; background: #f9f9f9; }
-    .timeline-container {
-      overflow-x: scroll;
-      overflow-y: scroll;
-      height: 600px;
-      border: 1px solid #ccc;
+    body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 0; }
+    .gantt-container {
+      overflow-x: auto;
       white-space: nowrap;
-      position: relative;
+      padding: 20px;
     }
-    .timeline-grid {
+    .time-header {
       display: flex;
-      position: relative;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 2;
+      margin-left: 80px;
     }
-    .timeline-hour {
+    .time-slot {
       width: 80px;
-      height: 100%;
-      border-right: 1px solid #eee;
-      writing-mode: vertical-lr;
+      height: 40px;
+      line-height: 40px;
       text-align: center;
-      padding-top: 5px;
-      background: #f0f0f0;
-      font-size: 12px;
+      border-right: 1px solid #ccc;
+      font-weight: bold;
     }
     .seat-row {
       display: flex;
       align-items: center;
       height: 60px;
       position: relative;
+      margin-bottom: 10px;
     }
     .seat-label {
       width: 80px;
       text-align: center;
-      background: #e0e0e0;
-      border-bottom: 1px solid #ccc;
       font-weight: bold;
+      background: #e8e8e8;
+      height: 60px;
+      line-height: 60px;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      border-right: 1px solid #ccc;
+    }
+    .seat-track {
+      flex-grow: 1;
+      position: relative;
     }
     .event {
       position: absolute;
-      height: 50px;
+      height: 40px;
       background: #4CAF50;
       color: white;
-      padding: 2px;
-      border-radius: 5px;
-      font-size: 12px;
+      padding: 4px;
+      border-radius: 6px;
+      font-size: 13px;
       text-align: center;
-      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </head>
 <body>
-  <h2 style="text-align:center;">좌석 예약 현황</h2>
-  <div class="timeline-container">
-    <div class="timeline-grid">
-      <div class="timeline-hour-column">
-        {% for hour in range(10, 21) %}
-          <div class="timeline-hour">{{ "%02d:00" % hour }}</div>
-        {% endfor %}
-      </div>
-      <div class="timeline-content">
-        {% for seat in range(1, 13) %}
-          <div class="seat-row">
-            <div class="seat-label">{{ seat }}번</div>
-            {% for res in reservations %}
-              {% if res[7] == seat|string %}
-                {% set start = res[2][:5] %}
-                {% set dur = res[3]|int %}
-                {% set left = (start.split(':')[0]|int - 10) * 80 + (start.split(':')[1]|int / 60 * 80) %}
-                {% set width = dur * 80 %}
-                <div class="event" style="left:{{ left }}px; width:{{ width }}px;" title="{{ res[1] }}">
-                  {{ res[1] }}<br/>({{ start }} ~ {{ dur }}분)
-                </div>
-              {% endif %}
-            {% endfor %}
-          </div>
-        {% endfor %}
-      </div>
+  <h2 style="text-align:center;">좌석별 예약 현황</h2>
+  <div class="gantt-container">
+    <!-- 시간 축 -->
+    <div class="time-header">
+      {% for hour in range(10, 21) %}
+        <div class="time-slot">{{ "%02d:00" % hour }}</div>
+      {% endfor %}
     </div>
+
+    <!-- 좌석별 타임라인 -->
+    {% for seat in range(1, 13) %}
+      <div class="seat-row">
+        <div class="seat-label">{{ seat }}번</div>
+        <div class="seat-track">
+          {% for res in reservations %}
+            {% if res[7] == seat|string %}
+              {% set start = res[2][:5] %}
+              {% set dur = res[3]|int %}
+              {% set left = ((start.split(':')[0]|int - 10) * 80 + (start.split(':')[1]|int / 60 * 80)) %}
+              {% set width = dur / 60 * 80 %}
+              <div class="event" style="left:{{ left }}px; width:{{ width }}px;" title="{{ res[1] }}">
+                {{ res[1] }}<br/>({{ start }} ~ {{ dur }}분)
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
   </div>
 </body>
 </html>
