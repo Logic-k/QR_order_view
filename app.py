@@ -92,7 +92,13 @@ def reserve():
 
     seats = [str(i) for i in range(1, 13)]
     timeline_html = "<div style='overflow-x: auto; white-space: nowrap;'>"
-    timeline_html += "<style> .slot { display: inline-block; width: 1.5em; text-align: center; font-size: 10px; } .bar { position: absolute; height: 24px; border-radius: 4px; background: #4CAF50; color: white; font-size: 12px; padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .row { position: relative; height: 30px; margin-bottom: 10px; border-bottom: 1px solid #ccc; } </style>"
+    timeline_html += """
+<style>
+.slot { display: inline-block; width: 24px; text-align: center; font-size: 10px; }
+.bar { position: absolute; height: 24px; border-radius: 4px; background: #4CAF50; color: white; font-size: 12px; padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row { position: relative; height: 30px; margin-bottom: 10px; border-bottom: 1px solid #ccc; }
+</style>
+"""
     minute_slots = generate_minute_slots()
 
     # 시간 타임라인 헤더
@@ -112,8 +118,8 @@ def reserve():
                 start_dt = datetime.strptime(start, "%H:%M")
                 index = (start_dt - datetime.strptime("10:00", "%H:%M")).seconds // 60
                 width = int(dur)  # 분 단위
-                left_px = index * 24  # 1분당 1.5em -> 24px 기준으로 설정
-                width_px = width * 24
+                left_px = index  # 1분당 1.5em -> 24px 기준으로 설정
+                width_px = width
                 timeline_html += f"<div class='bar' style='left: {left_px}px; width: {width_px}px;'>"
                 timeline_html += f"{name} <small>({memo})</small></div>"
         timeline_html += "</div>"
