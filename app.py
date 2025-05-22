@@ -118,7 +118,10 @@ def reserve():
     return render_template_string(
         form_html + """
 <div id='gantt'></div>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js'>function editReservation(taskId) {
+  alert(`예약 수정 기능은 아직 구현되지 않았습니다. 예약 ID: ${taskId}`);
+}
+</script>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.css' />
 <script>
   const tasks = [
@@ -133,7 +136,20 @@ def reserve():
     },
     {% endfor %}
   ];
-  new Gantt("#gantt", tasks);
+  const gantt = new Gantt("#gantt", tasks, {
+    view_mode: 'Hour',
+    custom_popup_html: function(task) {
+      return `
+        <div class="details-container">
+          <strong>${task.name}</strong><br/>
+          <button onclick="editReservation('${task.id}')">수정</button>
+          <form method='POST' action='/delete-reservation/${task.id.split('_')[0]}' style='display:inline;'>
+            <button type='submit'>삭제</button>
+          </form>
+        </div>
+      `;
+    }
+  });
 </script>
 """,
         tasks=tasks
