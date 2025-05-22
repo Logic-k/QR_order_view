@@ -58,7 +58,7 @@ def planner():
     reservations = []
     for rid, name, seat, start, duration in rows:
         h, m = map(int, start.split(":"))
-        start_minute = h * 60 + m
+        start_minute = h * 60 + m + m / 60
         reservations.append({
             "id": rid,
             "name": name,
