@@ -74,7 +74,7 @@ def reserve():
         conn.close()
         return redirect(url_for("reserve"))
 
-    # 예약 정보 불러오기 및 Frappe Gantt용 변환
+    # 예약 데이터 불러오기 및 task 생성
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, assigned_seats, start_time, duration, memo FROM reservations")
@@ -82,25 +82,38 @@ def reserve():
     conn.close()
 
     tasks = []
-    for rid, name, seats, start, dur, memo in reservations:
-        start_dt = datetime.strptime(start, "%H:%M")
-        end_dt = start_dt + timedelta(minutes=dur)
-        for seat in seats.split(','):
+    for rid, name, assigned_seats, start_time, duration, memo in reservations:
+        start_dt = datetime.strptime(start_time, "%H:%M")
+        end_dt = start_dt + timedelta(minutes=duration)
+        for seat in assigned_seats.split(','):
             tasks.append({
-                "id": f"{rid}_{seat}",
-                "name": f"좌석 {seat}",  # 동일 좌석을 같은 줄로 표시
-                "label": f"{name}",     # 툴팁에 예약자 표시
+                "id": f"{rid}_{seat.strip()}",
+                "name": f"좌석 {seat.strip()}",
+                "label": name,
                 "start": f"2025-05-23T{start_dt.strftime('%H:%M')}",
                 "end": f"2025-05-23T{end_dt.strftime('%H:%M')}",
                 "memo": memo
             })
 
-    # 좌석 번호순으로 정렬하여 같은 좌석은 같은 줄에 표시
+    # 좌석번호 기준으로 정렬하여 같은 좌석은 같은 줄
     tasks.sort(key=lambda x: int(x["name"].replace("좌석 ", "")))
 
-    # 예약 폼 + 간트차트 렌더링
     seats = [str(i) for i in range(1, 13)]
-    form_html = '''
+
+    return render_template_string("""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>예약 관리</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .bar-green { fill: #90caf9; }
+        #gantt { overflow-x: auto; }
+    </style>
+</head>
+<body>
     <h2>예약 등록</h2>
     <form method="POST">
         예약자명: <input name="name" required><br/>
@@ -113,59 +126,57 @@ def reserve():
             <option value="카드">카드</option>
         </select><br/>
         좌석 선택:<br/>
-        ''' + ''.join(f'<label><input type="checkbox" name="assigned_seats" value="{s}">{s}번</label> ' for s in seats) + '''<br/>
+        {% for seat in seats %}
+            <label><input type="checkbox" name="assigned_seats" value="{{ seat }}">{{ seat }}번</label>
+        {% endfor %}<br/>
         특이사항: <textarea name="memo"></textarea><br/>
         <button type="submit">예약 등록</button>
     </form>
+
     <h2>간트차트 시간표</h2>
-    '''
+    <div id="gantt"></div>
 
-    return render_template_string(form_html + """
-<div id='gantt'></div>
-<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.css' />
-<script src='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js'></script>
-<script>
-  const tasks = [
-    {% for task in tasks %}
-    {
-      id: '{{ task.id }}',
-      name: '{{ task.name }}',
-      start: '{{ task.start }}',
-      end: '{{ task.end }}',
-      progress: 100,
-      custom_class: 'bar-green',
-      label: '{{ task.label }}'
-    },
-    {% endfor %}
-  ];
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js"></script>
+    <script>
+        const tasks = [
+            {% for task in tasks %}
+            {
+                id: "{{ task.id }}",
+                name: "{{ task.name }}",
+                start: "{{ task.start }}",
+                end: "{{ task.end }}",
+                progress: 100,
+                label: "{{ task.label }}",
+                custom_class: "bar-green"
+            },
+            {% endfor %}
+        ];
 
-  const gantt = new Gantt("#gantt", tasks, {
-    view_mode: 'Hour',
-    column_width: 60,
-    step: 30,
-    time_formats: {
-      Hour: 'HH:mm'
-    },
-    custom_popup_html: function(task) {
-      return `
-        <div class="details-container">
-          <strong>예약자: ${task.label}</strong><br/>
-          <span>시작: ${task.start.slice(-5)}</span><br/>
-          <span>종료: ${task.end.slice(-5)}</span><br/>
-          <button onclick="editReservation('${task.id}')">수정</button>
-          <form method='POST' action='/delete-reservation/${task.id.split('_')[0]}' style='display:inline;'>
-            <button type='submit'>삭제</button>
-          </form>
-        </div>
-      `;
-    }
-  });
+        const gantt = new Gantt("#gantt", tasks, {
+            view_mode: 'Hour',
+            step: 30,
+            column_width: 100,
+            custom_popup_html: function(task) {
+                return `
+                    <div class="details-container">
+                        <strong>${task.label}</strong><br/>
+                        <span>${task.start.slice(-5)} ~ ${task.end.slice(-5)}</span><br/>
+                        <button onclick="editReservation('${task.id}')">수정</button>
+                        <form method='POST' action='/delete-reservation/${task.id.split('_')[0]}' style='display:inline;'>
+                            <button type='submit'>삭제</button>
+                        </form>
+                    </div>
+                `;
+            }
+        });
 
-  function editReservation(taskId) {
-    alert(`예약 수정 기능은 아직 구현되지 않았습니다. 예약 ID: ${taskId}`);
-  }
-</script>
-""", tasks=tasks)
+        function editReservation(id) {
+            alert("아직 수정 기능은 구현되지 않았습니다: " + id);
+        }
+    </script>
+</body>
+</html>
+""", tasks=tasks, seats=seats)
 # 주문 페이지 (QR 스캔)
 @app.route("/order", methods=["GET", "POST"])
 def order():
