@@ -102,13 +102,13 @@ def reserve():
     minute_slots = generate_minute_slots()
 
     # 시간 타임라인 헤더
-    timeline_html += "<div style='margin-left: 60px;'>"
+    timeline_html += "<div style='margin-left: 60px; position: relative;'>"
     for slot in minute_slots:
         if slot.endswith("0") or slot.endswith("5"):
             timeline_html += f"<span class='slot'>{slot}</span>"
         else:
             timeline_html += f"<span class='slot'>|</span>"
-    timeline_html += "</div>"
+    timeline_html += f"<div style='position: absolute; top: 0; bottom: 0; left: {{ (datetime.now().hour - 10) * 60 + datetime.now().minute }}px; width: 2px; background: red;'></div></div>"
 
     # 좌석별 예약 시각화
     for seat in seats:
