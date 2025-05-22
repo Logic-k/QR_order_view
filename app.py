@@ -121,7 +121,7 @@ def reserve():
             if seat in assigned.split(','):
                 today = datetime.now().date()
                 start_dt = datetime.combine(today, datetime.strptime(start, "%H:%M").time())
-                base_time = datetime.combine(today, datetime.strptime("10:00", "%H:%M").time())
+                base_time = datetime.combine(today, datetime.strptime("00:00", "%H:%M").time())
                 index = int((start_dt - base_time).total_seconds() // 1)
                 width = int(dur)  # 분 단위
                 left_px = index * 24  # 1분 = 24px 기준 복원
