@@ -115,7 +115,8 @@ def reserve():
     <h2>간트차트 시간표</h2>
     '''
 
-    return render_template_string(form_html + """
+    return render_template_string(
+        form_html + """
 <div id='gantt'></div>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.min.js'></script>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.5.0/frappe-gantt.css' />
@@ -134,7 +135,9 @@ def reserve():
   ];
   new Gantt("#gantt", tasks);
 </script>
-""")
+""",
+        tasks=tasks
+    )
 
 
 
