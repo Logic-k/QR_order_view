@@ -20,6 +20,7 @@ def create_tables():
             salt TEXT NOT NULL,
             drink TEXT NOT NULL,
             status TEXT NOT NULL DEFAULT '대기 중'
+        )
     """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS reservations (
