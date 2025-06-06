@@ -151,20 +151,20 @@ def order():
             </select><br/>
             <label>음료 선택 (Drink Selection) (饮料选择):</label>
             <select id="drink">
-    <option value="아메리카노(HOT)">아메리카노(HOT) / 美式咖啡 (热)</option>
-    <option value="아메리카노(COLD)">아메리카노(COLD) / 美式咖啡 (冰)</option>
-    <option value="캐모마일(HOT)">캐모마일(HOT) / 洋甘菊茶 (热)</option>
-    <option value="캐모마일(COLD)">캐모마일(COLD) / 洋甘菊茶 (冰)</option>
-    <option value="페퍼민트(HOT)">페퍼민트(HOT) / 薄荷茶 (热)</option>
-    <option value="페퍼민트(COLD)">페퍼민트(COLD) / 薄荷茶 (冰)</option>
-    <option value="루이보스(HOT)">루이보스(HOT) / 南非红茶 (热)</option>
-    <option value="루이보스(COLD)">루이보스(COLD) / 南非红茶 (冰)</option>
-    <option value="얼그레이(HOT)">얼그레이(HOT) / 伯爵茶 (热)</option>
-    <option value="얼그레이(COLD)">얼그레이(COLD) / 伯爵茶 (冰)</option>
-    <option value="핫초코(Only HOT)">핫초코(Only HOT) / 热巧克力</option>
-    <option value="아이스티(Only ICE)">아이스티(Only ICE) / 冰茶</option>
-    <option value="사과주스(Only ICE)">사과주스(Only ICE) / 苹果汁</option>
-    <option value="오렌지주스(Only ICE)">오렌지주스(Only ICE) / 橙汁</option>
+    <option value="아메리카노(HOT)">아메리카노(Americano)(HOT) / 美式咖啡 (热)</option>
+    <option value="아메리카노(COLD)">아메리카노(Americano)(COLD) / 美式咖啡 (冰)</option>
+    <option value="캐모마일(HOT)">캐모마일(Chamomile)(HOT) / 洋甘菊茶 (热)</option>
+    <option value="캐모마일(COLD)">캐모마일(Chamomile)(COLD) / 洋甘菊茶 (冰)</option>
+    <option value="페퍼민트(HOT)">페퍼민트(peppermint)(HOT) / 薄荷茶 (热)</option>
+    <option value="페퍼민트(COLD)">페퍼민트(peppermint)(COLD) / 薄荷茶 (冰)</option>
+    <option value="루이보스(HOT)">루이보스(Rooibos)(HOT) / 南非红茶 (热)</option>
+    <option value="루이보스(COLD)">루이보스(Rooibos)(COLD) / 南非红茶 (冰)</option>
+    <option value="얼그레이(HOT)">얼그레이(Earlgray)(HOT) / 伯爵茶 (热)</option>
+    <option value="얼그레이(COLD)">얼그레이(Earlgray)(COLD) / 伯爵茶 (冰)</option>
+    <option value="핫초코(Only HOT)">핫초코(Hot chocolate)(Only HOT) / 热巧克力</option>
+    <option value="아이스티(Only ICE)">아이스티(Iced Tea)(Only ICE) / 冰茶</option>
+    <option value="사과주스(Only ICE)">사과주스(Apple Juice)(Only ICE) / 苹果汁</option>
+    <option value="오렌지주스(Only ICE)">오렌지주스(Orange Juice)(Only ICE) / 橙汁</option>
 </select><br/>
             <button onclick="placeOrder()">주문하기 (Order Now)</button>
         </div>
