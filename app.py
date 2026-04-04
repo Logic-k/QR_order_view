@@ -280,7 +280,7 @@ def admin():
 
     orders = {}
     for order in orders_raw:
-        order_id, seat, salt, drink, status = order
+        order_id, seat, drink, status = order
         if seat not in orders:
             orders[seat] = []
         orders[seat].append({"id": order_id, "drink": drink, "status": status})
@@ -448,7 +448,6 @@ def admin():
                         <div class="seat {% if orders.get(seat_number|string) %}occupied{% endif %}">
                             {{ seat_number }}번
                             {% for order in orders.get(seat_number|string, []) %}
-                                <div>{{ order.salt }}</div>
                                 <div>{{ order.drink }}</div>
                                 <button class="delete-btn" onclick="deleteOrder('{{ order.id }}')">삭제</button>
                             {% endfor %}
