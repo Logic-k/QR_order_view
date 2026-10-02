@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% from 'drink_macros.html' import drink, families with context %}
+{% block title %}주문 관리{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+{% block header_note %}STAFF WORKSPACE{% endblock %}
+{% block head %}<meta name="csrf-token" content="{{ csrf_token }}">{% endblock %}
+{% macro overview_seat(number) %}
+ {% set seat_orders = orders.get(number|string, []) %}
+ <article class="overview-seat {% if seat_orders %}has-orders{% endif %}" data-overview-seat="{{ number }}" data-order-count="{{ seat_orders|length }}" aria-label="{{ number }}번 자리, 주문 {{ seat_orders|length }}건"><header><strong>{{ number }}<small>번</small></strong><span>{{ seat_orders|length }}건</span></header>
+ <div class="seat-menu-list">{% for order in seat_orders %}{% set name = order.drink.split('(')[0] %}{% set f = families.get(name) if order.drink in valid_drinks else none %}<div class="map-order {% if f %}family-{{ f.slug }}{% endif %}" data-map-order-id="{{ order.id }}" data-drink-value="{{ order.drink }}"><strong class="map-drink-name">{{ name if f else order.drink }}</strong><div class="map-drink-meta">{% if f %}<span class="map-family-symbol" aria-hidden="true">{{ f.symbol }}</span><span class="map-temperature">{% if 'HOT' in order.drink %}HOT · 热{% else %}ICED · 冰{% endif %}</span>{% endif %}</div></div>{% else %}<p class="map-no-orders">주문 없음</p>{% endfor %}</div></article>
+{% endmacro %}
+{% macro details(number) %}
+ <section id="seat-detail-{{ number }}" class="record-seat-panel" data-seat-detail="{{ number }}" aria-label="{{ number }}번 자리 주문 상세"><header class="detail-heading"><div><span class="eyebrow">SEAT ORDERS</span><h2><strong>{{ number }}</strong>번 자리 <span>주문 {{ orders.get(number|string,[])|length }}건</span></h2></div><span class="detail-help">모든 주문이 표시됩니다</span></header><div class="detail-orders">{% for order in orders.get(number|string,[]) %}<article class="detail-order">{{ drink(order.drink, compact=true) }}<div class="detail-order-footer"><span class="status-label">{{ order.status }}</span><button type="button" class="delete-one" data-order-id="{{ order.id }}" aria-label="{{ number }}번 자리 {{ order.drink }} 주문 삭제">주문 삭제</button></div></article>{% else %}<div class="detail-empty"><span aria-hidden="true">◌</span><p>접수된 주문이 없습니다.</p><small>새 주문은 30초마다 확인됩니다.</small></div>{% endfor %}</div></section>
+{% endmacro %}
+{% block content %}
+<main class="admin-layout">
+ <div class="admin-heading"><div><span class="eyebrow">ORDER OVERVIEW</span><h1>주문 관리</h1><p>자리와 음료를 함께, 한눈에 확인하세요.</p></div><div class="admin-toolbar"><span class="refresh-note"><i></i>30초마다 새로고침</span><button type="button" class="primary" id="master-toggle" aria-expanded="false" aria-controls="master-order-form">＋ 마스터 주문 입력</button></div></div>
+ <div id="admin-error" role="alert" class="error-message" hidden></div>
+ <section class="overview-panel" aria-label="전체 12개 자리 배치"><header class="overview-heading"><div><h2>전체 자리 배치</h2><p>각 자리의 모든 음료가 바로 표시됩니다.</p></div><div class="overview-legend"><span><i></i>주문 있음</span><span>이름 + HOT / ICED</span></div></header>
+ <div class="overview-map"><div class="overview-side" aria-label="왼쪽 세로 자리 12, 11, 10, 9">{% for n in range(12,8,-1) %}{{ overview_seat(n) }}{% endfor %}</div><div class="overview-main" aria-label="가운데 가로 자리 1부터 8">{% for n in range(1,9) %}{{ overview_seat(n) }}{% endfor %}</div></div>
+ </section>
+ <section class="all-orders-panel"><div class="all-orders-heading"><span class="eyebrow">ALL RECEIVED ORDERS</span><h2>전체 주문 목록</h2><p>모든 자리의 사진과 주문 관리 · 좌석 선택 없이 확인할 수 있습니다.</p></div><div class="record-seats">{% for n in range(1,13) %}{% if orders.get(n|string) %}{{ details(n) }}{% endif %}{% endfor %}</div>{% if not orders %}<p class="all-orders-empty">접수된 주문이 없습니다.</p>{% endif %}</section>
+ <section id="master-order-form" class="master-panel" hidden><div><span class="eyebrow">MANUAL ORDER</span><h2>마스터 주문 입력</h2></div><form id="master-form"><div class="field"><label for="master-seat">자리 번호</label><select id="master-seat">{% for num in range(1,13) %}<option value="{{ num }}">{{ num }}번</option>{% endfor %}</select></div><div class="field"><label for="master-drink">음료 선택</label><select id="master-drink"><option value="아메리카노(HOT)">아메리카노(Americano)(HOT) / 美式咖啡 (热)</option>
+<option value="아메리카노(COLD)">아메리카노(Americano)(COLD) / 美式咖啡 (冰)</option>
+<option value="캐모마일(HOT)">캐모마일(Chamomile)(HOT) / 洋甘菊茶 (热)</option>
+<option value="캐모마일(COLD)">캐모마일(Chamomile)(COLD) / 洋甘菊茶 (冰)</option>
+<option value="페퍼민트(HOT)">페퍼민트(peppermint)(HOT) / 薄荷茶 (热)</option>
+<option value="페퍼민트(COLD)">페퍼민트(peppermint)(COLD) / 薄荷茶 (冰)</option>
+<option value="루이보스(HOT)">루이보스(Rooibos)(HOT) / 南非红茶 (热)</option>
+<option value="루이보스(COLD)">루이보스(Rooibos)(COLD) / 南非红茶 (冰)</option>
+<option value="얼그레이(HOT)">얼그레이(Earlgray)(HOT) / 伯爵茶 (热)</option>
+<option value="얼그레이(COLD)">얼그레이(Earlgray)(COLD) / 伯爵茶 (冰)</option>
+<option value="핫초코(Only HOT)">핫초코(Hot chocolate)(Only HOT) / 热巧克力</option>
+<option value="아이스티(Only ICE)">아이스티(Iced Tea)(Only ICE) / 冰茶</option>
+<option value="사과주스(Only ICE)">사과주스(Apple Juice)(Only ICE) / 苹果汁</option>
+<option value="오렌지주스(Only ICE)">오렌지주스(Orange Juice)(Only ICE) / 橙汁</option></select></div><button type="submit" class="primary">주문 등록</button></form></section>
+ {% for seat in orders if seat not in valid_seats %}<section class="all-orders-panel"><h2>기존 자리 기록: {{ seat }}</h2>{{ details(seat) }}</section>{% endfor %}
+ <div class="admin-bottom"><p>주문 상태는 실제 접수된 데이터를 기준으로 표시됩니다.</p><button type="button" class="danger" id="delete-all" {% if not orders %}disabled{% endif %}>모든 주문 삭제</button></div>
+ {% include 'photo_credits.html' %}
+</main>{% endblock %}
