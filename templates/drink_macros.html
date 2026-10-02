@@ -1,0 +1,19 @@
+{% set families = {
+ '아메리카노': {'slug':'americano','name':'아메리카노','en':'Americano','zh':'美式咖啡','category':'커피 · COFFEE','symbol':'◎'},
+ '캐모마일': {'slug':'chamomile','name':'캐모마일','en':'Chamomile','zh':'洋甘菊茶','category':'플라워 티 · FLORAL','symbol':'✿'},
+ '페퍼민트': {'slug':'peppermint','name':'페퍼민트','en':'Peppermint','zh':'薄荷茶','category':'허브 티 · HERBAL','symbol':'❧'},
+ '루이보스': {'slug':'rooibos','name':'루이보스','en':'Rooibos','zh':'南非红茶','category':'루이보스 티 · TEA','symbol':'◇'},
+ '얼그레이': {'slug':'earlgrey','name':'얼그레이','en':'Earl Grey','zh':'伯爵茶','category':'블랙 티 · BLACK TEA','symbol':'✦'},
+ '핫초코': {'slug':'chocolate','name':'핫초코','en':'Hot chocolate','zh':'热巧克力','category':'초콜릿 · CHOCOLATE','symbol':'▦'},
+ '아이스티': {'slug':'icedtea','name':'아이스티','en':'Iced tea','zh':'冰茶','category':'아이스 티 · ICED TEA','symbol':'◒'},
+ '사과주스': {'slug':'apple','name':'사과주스','en':'Apple juice','zh':'苹果汁','category':'과일 주스 · JUICE','symbol':'◉'},
+ '오렌지주스': {'slug':'orange','name':'오렌지주스','en':'Orange juice','zh':'橙汁','category':'과일 주스 · JUICE','symbol':'◉'}
+} %}
+{% macro drink(value, compact=false) %}
+  {% set name = value.split('(')[0] %}{% set f = families.get(name) if value in valid_drinks else none %}{% set hot = 'HOT' in value %}{% set image_slug = 'americano-iced' if name == '아메리카노' and not hot else f.slug if f else '' %}
+  <div class="beverage {% if f %}beverage-{{ f.slug }}{% endif %} {% if compact %}compact-beverage{% endif %}">
+    {% if f %}<div class="beverage-image"><img src="{{ url_for('static',filename='drinks/' ~ image_slug ~ '.webp') }}" alt="" loading="lazy" width="480" height="300" data-drink-fallback="{{ url_for('static',filename='drinks/' ~ f.slug ~ '.svg') }}"><span class="family-symbol" aria-hidden="true">{{ f.symbol }}</span></div>{% endif %}
+    <div class="beverage-copy">{% if f %}<span class="category-label">{{ f.category }}</span><strong class="beverage-name">{{ f.name }}</strong><span class="beverage-en" lang="en">{{ f.en }}</span><span class="beverage-zh" lang="zh">{{ f.zh }}</span>{% else %}<strong class="beverage-name">{{ value }}</strong>{% endif %}
+    {% if f %}<span class="temperature {% if not hot %}cold{% endif %}">{% if hot %}♨ HOT · 热{% else %}❄ ICED · 冰{% endif %}</span>{% endif %}</div>
+  </div>
+{% endmacro %}

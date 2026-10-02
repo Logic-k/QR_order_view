@@ -1,0 +1,49 @@
+/* Every order is visible by its seat; no selection, ellipsis, or internal scrolling. */
+.admin-page .site-header{padding-top:12px;padding-bottom:12px}
+.admin-page .admin-layout{padding:0 16px;margin-top:18px}
+.admin-page .admin-heading{margin-bottom:16px}
+.admin-page .admin-heading h1{font-size:27px}
+.admin-page .admin-heading p{font-size:13px}
+.overview-panel{padding:16px 14px;margin-bottom:24px}
+.overview-heading{margin-bottom:12px}
+.overview-heading h2{font-size:19px}
+.overview-map{grid-template-columns:88px minmax(0,1fr);gap:12px;padding:6px 0;align-items:center}
+.overview-side{gap:6px}
+.overview-main{gap:4px;align-items:stretch}
+.overview-seat{display:block;height:auto;min-height:66px;padding:0;border-radius:10px;overflow:visible;background:#fcfcf7;min-width:0;color:var(--ink)}
+.overview-seat.has-orders{background:var(--surface);border-color:#b4c5a6}
+.overview-seat>header{display:flex;align-items:center;justify-content:space-between;gap:3px;padding:6px 5px;border-bottom:1px solid var(--line);background:#f0f3e9;border-radius:9px 9px 0 0}
+.overview-seat>header>strong{font-size:18px;font-weight:600;line-height:1.2}
+.overview-seat>header>strong small{font-size:9px;margin-left:2px}
+.overview-seat>header>span{font-size:9px;color:var(--muted);white-space:nowrap}
+.seat-menu-list{padding:4px;display:flex;flex-direction:column;gap:4px}
+.map-order{--family:#746246;--family-bg:#f2eadc;display:flex;flex-direction:column;gap:2px;padding:4px 2px;border-left:2px solid var(--family);border-radius:4px;background:var(--family-bg);min-width:0}
+.map-order.family-chamomile{--family:#9a7833;--family-bg:#fbf1d7}
+.map-order.family-peppermint{--family:#587e4b;--family-bg:#eaf2e1}
+.map-order.family-rooibos{--family:#a46549;--family-bg:#f6e5db}
+.map-order.family-earlgrey{--family:#6b6e8c;--family-bg:#ececf5}
+.map-order.family-chocolate{--family:#87604b;--family-bg:#f3e6db}
+.map-order.family-icedtea{--family:#a67b35;--family-bg:#fbefd7}
+.map-order.family-apple{--family:#738f4e;--family-bg:#edf4df}
+.map-order.family-orange{--family:#b57b31;--family-bg:#fcf0d9}
+.overview-seat .map-drink-name{display:block;font-size:14px;font-weight:600;line-height:1.35;letter-spacing:-.5px;word-break:normal;overflow-wrap:anywhere;white-space:normal}
+.map-drink-meta{display:flex;align-items:center;gap:3px;min-width:0}
+.map-family-symbol{font-size:10px;line-height:1;color:var(--family)}
+.map-temperature{font-size:9px;font-weight:700;letter-spacing:-.1px;white-space:nowrap;color:#53634d}
+.map-no-orders{font-size:10px;line-height:1.5;color:var(--muted);text-align:center;margin:8px 0}
+.all-orders-panel{margin:24px 0}
+.all-orders-heading{margin-bottom:16px}
+.all-orders-heading h2{font-size:21px;margin:5px 0}
+.all-orders-heading p{font-size:12px;color:var(--muted)}
+.record-seats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.record-seat-panel{padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:16px;min-width:0}
+.record-seat-panel .detail-heading{margin-bottom:12px}
+.record-seat-panel .detail-help{display:none}
+.record-seat-panel .detail-heading h2{font-size:17px}
+.record-seat-panel .detail-heading h2>strong{font-size:26px}
+.record-seat-panel .detail-orders{grid-template-columns:1fr;gap:10px}
+.record-seat-panel .detail-order .compact-beverage{grid-template-columns:80px minmax(0,1fr);min-height:124px;height:auto}
+.record-seat-panel .detail-order .compact-beverage .beverage-image{min-height:124px}
+.all-orders-empty{padding:30px;border:1px dashed var(--line);border-radius:12px;text-align:center;color:var(--muted)}
+@media(max-width:900px){.admin-page .admin-layout{padding:0 12px;margin-top:16px}.admin-page .site-header{padding:12px 16px}.admin-page .admin-heading{margin-bottom:14px}.admin-page .admin-heading h1{font-size:26px}.overview-panel{padding:14px 12px}.overview-map{grid-template-columns:80px minmax(0,1fr);gap:10px}.overview-main{gap:4px}.overview-seat{height:auto;min-height:66px}.overview-seat>header{padding:5px 4px}.overview-seat .map-drink-name{font-size:14px}.seat-menu-list{padding:3px}.map-order{padding:4px 2px}.record-seat-panel{padding:14px}}
+@media(max-width:700px){.record-seats{grid-template-columns:1fr}.overview-map{grid-template-columns:60px minmax(0,1fr);gap:6px}.overview-main{gap:2px}.overview-seat>header{padding:4px 2px}.overview-seat>header>strong{font-size:13px}.overview-seat>header>span{font-size:7px}.overview-seat .map-drink-name{font-size:11px;letter-spacing:-.5px}.map-temperature{font-size:7px}.map-family-symbol{display:none}.map-no-orders{font-size:8px}.seat-menu-list{padding:2px}.map-order{padding:3px 1px}}

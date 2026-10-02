@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from 'drink_macros.html' import drink with context %}
+{% block title %}음료 주문 · 자리 {{ seat_number }}{% endblock %}
+{% block body_class %}customer-page{% endblock %}
+{% block content %}
+<main class="order-layout">
+ <aside class="welcome"><span class="eyebrow">YOUR LITTLE BREAK</span><div class="welcome-title"><div><h1>한 잔의 여유</h1><p class="intro">Choose your drink · 选择饮料</p></div><div class="seat-badge"><span>현재 자리 <small>YOUR SEAT · 座位</small></span><strong>{{ seat_number }}<small>번</small></strong></div></div>
+ {% include 'seat_map.html' %}
+ <div class="staff-note"><span aria-hidden="true">✦</span><p>도움이 필요하면 직원을 불러주세요.<small lang="en">Please call staff if you need help.</small><small lang="zh">如需帮助，请呼叫工作人员。</small></p></div></aside>
+ <section class="menu-panel"><div class="section-heading"><div><span class="eyebrow">A DRINK FOR YOUR MOMENT</span><h2>오늘의 음료</h2></div><span class="menu-count">14 OPTIONS</span></div><p class="image-note">이미지는 메뉴 이해를 돕기 위한 예시입니다.<span>Example images · 图片仅供参考</span></p>
+ <form id="order-form" data-seat="{{ seat_number }}"><fieldset><legend class="sr-only">음료 선택 / Drink selection / 饮料选择</legend><div class="drink-grid">
+ <label class="drink-card"><input type="radio" name="drink" value="아메리카노(HOT)" checked required>{{ drink('아메리카노(HOT)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="아메리카노(COLD)"  required>{{ drink('아메리카노(COLD)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="캐모마일(HOT)"  required>{{ drink('캐모마일(HOT)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="캐모마일(COLD)"  required>{{ drink('캐모마일(COLD)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="페퍼민트(HOT)"  required>{{ drink('페퍼민트(HOT)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="페퍼민트(COLD)"  required>{{ drink('페퍼민트(COLD)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="루이보스(HOT)"  required>{{ drink('루이보스(HOT)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="루이보스(COLD)"  required>{{ drink('루이보스(COLD)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="얼그레이(HOT)"  required>{{ drink('얼그레이(HOT)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="얼그레이(COLD)"  required>{{ drink('얼그레이(COLD)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="핫초코(Only HOT)"  required>{{ drink('핫초코(Only HOT)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="아이스티(Only ICE)"  required>{{ drink('아이스티(Only ICE)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="사과주스(Only ICE)"  required>{{ drink('사과주스(Only ICE)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+<label class="drink-card"><input type="radio" name="drink" value="오렌지주스(Only ICE)"  required>{{ drink('오렌지주스(Only ICE)') }}<span class="choice-check" aria-hidden="true">✓</span></label>
+ </div></fieldset><div class="order-actions"><div id="order-error" class="error-message" role="alert" hidden></div><p class="selection-note"><strong id="selected-drink-name">아메리카노(HOT)</strong><span>자리 {{ seat_number }}번으로 주문합니다.</span><small>Your drink will be served at seat {{ seat_number }}. · 饮料将送到 {{ seat_number }} 号座位。</small></p><button type="submit" class="primary" id="order-submit">주문하기 <span>Order now · 下单 →</span></button><p class="pending-note" id="order-pending" role="status" hidden>주문 접수 중 · Sending your order · 正在提交订单</p></div></form></section>
+{% include 'photo_credits.html' %}</main>{% endblock %}
